@@ -51,7 +51,7 @@ Plus one shared entity:
 
 ## Usage Example — RGB LED status indicator
 
-You can drive an RGB bulb to reflect the current burn ban status using a state-triggered automation. Add this to your `automations.yaml` (or create it via the UI):
+You can drive an RGB bulb to reflect the current burn ban status using a state-triggered automation. Using the built-in `status_rgb` attribute makes this simple and ensures colours match the provincial standard:
 
 ```yaml
 automation:
@@ -66,14 +66,7 @@ automation:
         target:
           entity_id: light.your_rgb_bulb
         data:
-          rgb_color: >
-            {% set colors = {
-              'allowed': [0, 200, 0],
-              'limited': [255, 180, 0],
-              'none':    [200, 0, 0],
-              'unknown': [100, 100, 100]
-            } %}
-            {{ colors.get(states('sensor.york_county_burn_ban_status'), [100, 100, 100]) }}
+          rgb_color: "{{ state_attr('sensor.york_county_burn_ban_status', 'status_rgb') }}"
           brightness: 200
 ```
 

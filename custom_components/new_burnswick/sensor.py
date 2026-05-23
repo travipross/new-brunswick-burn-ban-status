@@ -14,6 +14,7 @@ from .const import (
     CONF_COUNTY,
     DOMAIN,
     ICON_MAPPING,
+    RGB_MAPPING,
     STATUS_MAPPING,
     TEXT_MAPPING,
 )
@@ -138,6 +139,7 @@ class NewBurnswickSensor(CoordinatorEntity, SensorEntity):
             "county": self.county.title(),
             "status_text": TEXT_MAPPING.get(category, "Unknown"),
             "status_color": COLOR_MAPPING.get(category, "unknown"),
+            "status_rgb": RGB_MAPPING.get(category, [128, 128, 128]),
             "valid_date": valid_date_iso,
             "raw_category": category,
         }

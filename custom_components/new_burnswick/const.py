@@ -56,3 +56,10 @@ COLOR_MAPPING = {
     2: "yellow",
     3: "green",
 }
+
+RGB_MAPPING = {
+    0: [128, 128, 128],  # Gray
+    1: [255, 0, 0],    # Red
+    2: [255, 255, 0],  # Yellow
+    3: [0, 255, 0],    # Green
+}
