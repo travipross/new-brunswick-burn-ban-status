@@ -1,5 +1,5 @@
 """Sensor platform for New Brunswick Burn Ban Status."""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import logging
 
 from homeassistant.components.sensor import SensorEntity
@@ -147,4 +147,5 @@ class NewBurnswickSensor(CoordinatorEntity, SensorEntity):
             "api_valid_from": valid_date_iso,
             "api_valid_until": api_valid_until,
             "raw_category": category,
+            "api_payload": data,
         }
