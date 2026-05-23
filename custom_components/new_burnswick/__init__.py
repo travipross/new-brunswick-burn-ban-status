@@ -76,6 +76,7 @@ class NewBurnswickCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, dict]:
         """Fetch data from the GIS server API."""
+        _LOGGER.debug("Starting API fetch from GNB GIS server.")
         try:
             # Using content_type=None in response.json() is robust against incorrect Content-Type headers
             async with self.session.get(API_URL, timeout=10) as response:
@@ -83,6 +84,7 @@ class NewBurnswickCoordinator(DataUpdateCoordinator):
                     raise UpdateFailed(f"Error fetching data: {response.status}")
                 
                 data = await response.json(content_type=None)
+                _LOGGER.debug("API fetch successful, processing features.")
                 features = data.get("features", [])
                 
                 # Map county name (in uppercase) to its attributes dictionary
@@ -139,12 +141,12 @@ class NewBurnswickCoordinator(DataUpdateCoordinator):
                     datetime.min.time().replace(hour=UPDATE_HOUR_DATA, minute=UPDATE_MINUTE),
                     tzinfo=NB_TZ,
                 )
+                _LOGGER.debug(
+                    "Data is fresh (VALIDDATE: %s). Sleeping until tomorrow's update window.",
+                    valid_dt.isoformat()
+                )
             else:
                 # Data is old. 
-                # If it's before 11:05 AM, wait until 11:05 AM today.
-                # If it's between 11:05 AM and 2:05 PM, poll every 15 mins to catch the server update.
-                # If it's after 2:05 PM, keep polling every 15 mins (maybe the server is very late).
-                
                 target_today_11 = datetime.combine(
                     now_nb.date(),
                     datetime.min.time().replace(hour=UPDATE_HOUR_DATA, minute=UPDATE_MINUTE),
@@ -153,9 +155,11 @@ class NewBurnswickCoordinator(DataUpdateCoordinator):
                 
                 if now_nb < target_today_11:
                     next_update = target_today_11
+                    _LOGGER.debug("Waiting for today's 11:05 AM update window.")
                 else:
                     # We are in the "waiting for server" window
                     next_update = now_nb + timedelta(minutes=15)
+                    _LOGGER.debug("Data is stale. Retrying in 15 minutes to catch server update.")
 
         _LOGGER.debug("Scheduling next API poll for: %s Atlantic", next_update.isoformat())
         

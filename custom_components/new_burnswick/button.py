@@ -55,4 +55,6 @@ class NewBurnswickRefreshButton(CoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
+        from .__init__ import _LOGGER
+        _LOGGER.debug("Manual refresh triggered via button.")
         await self.coordinator.async_request_refresh()

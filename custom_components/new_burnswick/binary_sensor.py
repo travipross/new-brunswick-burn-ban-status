@@ -133,7 +133,7 @@ class NewBurnswickFireAllowedSensor(CoordinatorEntity, BinarySensorEntity):
         """
         next_time = _next_transition_time()
         _LOGGER.debug(
-            "%s: next fire-allowed transition at %s Atlantic Time",
+            "%s: Scheduling next policy transition for %s Atlantic",
             self.entity_id,
             next_time.isoformat(),
         )
@@ -148,6 +148,7 @@ class NewBurnswickFireAllowedSensor(CoordinatorEntity, BinarySensorEntity):
     @callback
     def _handle_time_transition(self, now: datetime.datetime) -> None:
         """Push a state update at the boundary, then schedule the next one."""
+        _LOGGER.debug("%s: Policy transition boundary reached. Updating state.", self.entity_id)
         self.async_write_ha_state()
         self._schedule_next_transition()
 
@@ -163,9 +164,18 @@ class NewBurnswickFireAllowedSensor(CoordinatorEntity, BinarySensorEntity):
         """Return True if fire is currently allowed."""
         data = self._county_data
         if not data:
+            _LOGGER.debug("%s: No data available for state calculation", self.entity_id)
             return None
         category = data.get("PUBLICCATEGORY", 0)
-        return _fire_allowed_now(category)
+        result = _fire_allowed_now(category)
+        _LOGGER.debug(
+            "%s: Calculated allowed status as %s (Category: %s, Time: %s Atlantic)",
+            self.entity_id,
+            result,
+            category,
+            datetime.datetime.now(tz=NB_TZ).strftime("%H:%M:%S")
+        )
+        return result
 
     @property
     def icon(self) -> str:
