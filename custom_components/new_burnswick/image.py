@@ -64,7 +64,7 @@ class NewBurnswickMapImageEntity(CoordinatorEntity, ImageEntity):
     @property
     def image_url(self) -> str | None:
         """Return the URL of the image."""
-        return "https://www3.gnb.ca/public/fire-feu/maps/cat1.png?dummy=0.4236566"
+        return "https://www3.gnb.ca/public/fire-feu/maps/cat1.png"
 
     @property
     def image_last_updated(self) -> datetime | None:
