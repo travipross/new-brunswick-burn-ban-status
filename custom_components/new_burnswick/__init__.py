@@ -1,16 +1,28 @@
 """The New Brunswick Burn Ban Status integration."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
+from zoneinfo import ZoneInfo
 
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import API_URL, CONF_COUNTY, DOMAIN, UPDATE_INTERVAL_MINUTES
+from .const import (
+    API_URL,
+    CONF_COUNTY,
+    DOMAIN,
+    UPDATE_HOUR_DATA,
+    UPDATE_HOUR_PUBLIC,
+    UPDATE_MINUTE,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+# New Brunswick is always Atlantic Time
+NB_TZ = ZoneInfo("America/Moncton")
 
 PLATFORMS = ["sensor", "image", "binary_sensor", "button"]
 
@@ -52,12 +64,14 @@ class NewBurnswickCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, session: aiohttp.ClientSession) -> None:
         """Initialize the coordinator."""
         self.session = session
+        self._next_update_callback = None
         
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=UPDATE_INTERVAL_MINUTES),
+            # We disable the automatic interval and manage it manually
+            update_interval=None,
         )
 
     async def _async_update_data(self) -> dict[str, dict]:
@@ -81,8 +95,74 @@ class NewBurnswickCoordinator(DataUpdateCoordinator):
                 
                 if not mapped_data:
                     raise UpdateFailed("No county data found in API response.")
+                
+                # Schedule the next poll based on the freshly received data
+                self._schedule_next_update(mapped_data)
                     
                 return mapped_data
 
         except Exception as err:
+            # If fetch fails, retry in 15 minutes as a fallback
+            self._schedule_next_update(None, retry=True)
             raise UpdateFailed(f"Communicating with API failed: {err}") from err
+
+    @callback
+    def _schedule_next_update(self, data: dict | None, retry: bool = False) -> None:
+        """Calculate and schedule the next polling time."""
+        if self._next_update_callback:
+            self._next_update_callback()
+            self._next_update_callback = None
+
+        now_nb = datetime.now(tz=NB_TZ)
+        next_update = None
+
+        if retry:
+            # Basic retry if something went wrong
+            next_update = now_nb + timedelta(minutes=15)
+        else:
+            # Determine if the data we just got is "current" (from today's update window)
+            is_fresh = False
+            if data:
+                # All counties share the same VALIDDATE
+                first_county = next(iter(data.values()))
+                valid_date_ms = first_county.get("VALIDDATE")
+                if valid_date_ms:
+                    # VALIDDATE is 11:00 AM Atlantic (14:00 UTC)
+                    valid_dt = datetime.fromtimestamp(valid_date_ms / 1000.0, tz=NB_TZ)
+                    if valid_dt.date() == now_nb.date() and valid_dt.hour >= UPDATE_HOUR_DATA:
+                        is_fresh = True
+
+            if is_fresh:
+                # We have today's data. Sleep until 11:05 AM tomorrow.
+                next_update = datetime.combine(
+                    now_nb.date() + timedelta(days=1),
+                    datetime.min.time().replace(hour=UPDATE_HOUR_DATA, minute=UPDATE_MINUTE),
+                    tzinfo=NB_TZ,
+                )
+            else:
+                # Data is old. 
+                # If it's before 11:05 AM, wait until 11:05 AM today.
+                # If it's between 11:05 AM and 2:05 PM, poll every 15 mins to catch the server update.
+                # If it's after 2:05 PM, keep polling every 15 mins (maybe the server is very late).
+                
+                target_today_11 = datetime.combine(
+                    now_nb.date(),
+                    datetime.min.time().replace(hour=UPDATE_HOUR_DATA, minute=UPDATE_MINUTE),
+                    tzinfo=NB_TZ,
+                )
+                
+                if now_nb < target_today_11:
+                    next_update = target_today_11
+                else:
+                    # We are in the "waiting for server" window
+                    next_update = now_nb + timedelta(minutes=15)
+
+        _LOGGER.debug("Scheduling next API poll for: %s Atlantic", next_update.isoformat())
+        
+        self._next_update_callback = async_track_point_in_time(
+            self.hass, self._handle_scheduled_update, next_update
+        )
+
+    async def _handle_scheduled_update(self, _now: datetime) -> None:
+        """Trigger the coordinator refresh."""
+        await self.async_refresh()

@@ -25,6 +25,7 @@ _CATEGORY_GREEN = 3   # Always allowed
 # Boundary hours in Atlantic Time
 _ALLOW_HOUR_START = 20  # 8 PM — burning window opens
 _ALLOW_HOUR_END = 8     # 8 AM — burning window closes
+_EFFECTIVE_HOUR = 14    # 2 PM — new day's conditions become effective
 
 
 async def async_setup_entry(
@@ -57,27 +58,39 @@ async def async_setup_entry(
 
 def _fire_allowed_now(category: int) -> bool | None:
     """Determine if fire is currently allowed based on category and Atlantic Time."""
+    now_nb = datetime.datetime.now(tz=NB_TZ)
+    now_time = now_nb.time()
+
     if category == _CATEGORY_GREEN:
+        # Green is always allowed
         return True
+
     if category == _CATEGORY_YELLOW:
-        now = datetime.datetime.now(tz=NB_TZ).time()
         # Allowed from 8 PM (inclusive) through midnight and up to (not including) 8 AM
-        return now >= datetime.time(_ALLOW_HOUR_START, 0) or now < datetime.time(_ALLOW_HOUR_END, 0)
+        return now_time >= datetime.time(_ALLOW_HOUR_START, 0) or now_time < datetime.time(_ALLOW_HOUR_END, 0)
+
     if category == _CATEGORY_RED:
         return False
     return None  # Unknown category
 
 
 def _next_transition_time() -> datetime.datetime:
-    """Return the next 8 AM or 8 PM as a timezone-aware Atlantic Time datetime."""
+    """Return the next 8 AM, 2 PM, or 8 PM as a timezone-aware Atlantic Time datetime."""
     now_nb = datetime.datetime.now(tz=NB_TZ)
     today = now_nb.date()
     candidates = [
         datetime.datetime.combine(today, datetime.time(_ALLOW_HOUR_END, 0), NB_TZ),
+        datetime.datetime.combine(today, datetime.time(_EFFECTIVE_HOUR, 0), NB_TZ),
         datetime.datetime.combine(today, datetime.time(_ALLOW_HOUR_START, 0), NB_TZ),
-        # Always include tomorrow's 8 AM as a fallback (handles post-8 PM case)
+        # Fallbacks for tomorrow
         datetime.datetime.combine(
             today + datetime.timedelta(days=1), datetime.time(_ALLOW_HOUR_END, 0), NB_TZ
+        ),
+        datetime.datetime.combine(
+            today + datetime.timedelta(days=1), datetime.time(_EFFECTIVE_HOUR, 0), NB_TZ
+        ),
+        datetime.datetime.combine(
+            today + datetime.timedelta(days=1), datetime.time(_ALLOW_HOUR_START, 0), NB_TZ
         ),
     ]
     return min(t for t in candidates if t > now_nb)
@@ -113,7 +126,7 @@ class NewBurnswickFireAllowedSensor(CoordinatorEntity, BinarySensorEntity):
 
     @callback
     def _schedule_next_transition(self) -> None:
-        """Register a one-shot timer for the next 8 AM or 8 PM Atlantic Time.
+        """Register a one-shot timer for state boundaries.
 
         Uses async_track_point_in_time with an explicit Atlantic Time datetime so the
         transition fires correctly regardless of the HA instance's configured timezone.

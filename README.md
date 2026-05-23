@@ -11,9 +11,25 @@ A [Home Assistant](https://www.home-assistant.io/) custom integration that track
   - 🔴 **Red** (none) → always `off`
 - **Burn ban map image entity** — displays the [provincial burn category map](https://www3.gnb.ca/public/fire-feu/maps/cat1.png).
 - **Multi-county selection** — pick one, several, or all counties during setup. Counties can be changed at any time via the integration's options flow.
-- Data is refreshed every **30 minutes** from the GNB GIS API.
+
+## How it works — Technical Logic
+
+To minimize impact on the provincial GIS servers while maintaining 100% accuracy, this integration uses a "Split-Clock" logic:
+
+### 1. Intelligent Polling (The Coordinator)
+The integration does **not** poll every few minutes. Instead, it targets the provincial update window:
+- **Daily Update:** The provincial GIS database typically generates new records at **11:00 AM Atlantic Time**.
+- **The Polling Window:** The integration starts checking for updates at 11:05 AM. If the server is late, it retries every 15 minutes.
+- **Data Freshness:** Once "today's" record is successfully retrieved, the integration **stops all API calls** until 11:05 AM the following day.
+- **Manual Refresh:** You can still force an immediate update at any time using the **Refresh Data** button.
+
+### 2. State Transitions (The Entities)
+While the *status* (Red/Yellow/Green) only updates once a day, the *permission* to burn (for Yellow status) changes at **8:00 PM** and **8:00 AM**.
+- **No-Latency Transitions:** The `binary_sensor` handles these transitions internally using Home Assistant's local timers. 
+- It does **not** call the API at 8 PM. It simply looks at the last-fetched status and flips its state locally, ensuring your automations trigger precisely on time without network delays.
 
 ## Installation
+...
 
 ### HACS (recommended)
 
