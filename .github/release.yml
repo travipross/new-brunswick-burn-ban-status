@@ -1,0 +1,23 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+  categories:
+    - title: "🚀 New Features"
+      labels:
+        - enhancement
+    - title: "🐛 Bug Fixes"
+      labels:
+        - bug
+    - title: "🧰 Maintenance"
+      labels:
+        - chore
+        - maintenance
+    - title: "📚 Documentation"
+      labels:
+        - documentation
+
+# This part tells GitHub how to map commit message prefixes to labels/categories
+# Note: GitHub's native generator primarily uses Labels on Pull Requests.
+# For direct commits, it will list them under "Other Changes" unless 
+# we use a more advanced tool like Release Drafter.
