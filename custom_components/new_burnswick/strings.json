@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "New Brunswick Burn Ban Status",
+        "description": "Select the counties you want to monitor. Select 'Select All' to monitor all counties.",
+        "data": {
+          "county": "Counties"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This integration is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Monitored Counties",
+        "description": "Select the counties you want to monitor. Select 'Select All' to monitor all counties.",
+        "data": {
+          "county": "Counties"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "burn_ban_status": {
+        "name": "Burn ban status",
+        "state": {
+          "unknown": "Unknown",
+          "none": "No burning allowed",
+          "limited": "Burning allowed between 8pm and 8am",
+          "allowed": "Burning allowed"
+        }
+      }
+    }
+  }
+}

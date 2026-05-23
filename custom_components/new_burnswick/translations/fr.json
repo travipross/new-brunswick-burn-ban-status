@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Statut des interdictions de feux au Nouveau-Brunswick",
+        "description": "Sélectionnez les comtés que vous souhaitez surveiller. Choisissez « Tout sélectionner » pour surveiller tous les comtés.",
+        "data": {
+          "county": "Comtés"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Cette intégration est déjà configurée."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configurer les comtés surveillés",
+        "description": "Sélectionnez les comtés que vous souhaitez surveiller. Choisissez « Tout sélectionner » pour surveiller tous les comtés.",
+        "data": {
+          "county": "Comtés"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "burn_ban_status": {
+        "name": "Statut de l'interdiction de feux",
+        "state": {
+          "unknown": "Inconnu",
+          "none": "Feux interdits",
+          "limited": "Feux permis entre 20 h et 8 h",
+          "allowed": "Feux permis"
+        }
+      }
+    }
+  }
+}

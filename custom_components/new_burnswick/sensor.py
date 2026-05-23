@@ -1,0 +1,119 @@
+"""Sensor platform for New Brunswick Burn Ban Status."""
+from datetime import datetime, timezone
+import logging
+
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import (
+    COLOR_MAPPING,
+    CONF_COUNTY,
+    DOMAIN,
+    ICON_MAPPING,
+    STATUS_MAPPING,
+    TEXT_MAPPING,
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the sensor platform."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    
+    # Read selected counties from options first, falling back to data
+    counties = entry.options.get(CONF_COUNTY, entry.data.get(CONF_COUNTY, []))
+
+    entities = [
+        NewBurnswickSensor(coordinator, entry, county)
+        for county in counties
+    ]
+    async_add_entities(entities, True)
+
+
+class NewBurnswickSensor(CoordinatorEntity, SensorEntity):
+    """Representation of a New Brunswick Burn Ban Status sensor."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "burn_ban_status"
+
+    def __init__(self, coordinator, entry: ConfigEntry, county: str) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.entry = entry
+        self.county = county.upper()
+        
+        # Unique ID for the sensor
+        self._attr_unique_id = f"{entry.entry_id}_{self.county.lower()}_status"
+        
+        # Setting name to None ensures it takes the device name as the entity name
+        self._attr_name = None
+        
+        # Device info to group entities by county
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, f"{entry.entry_id}_{self.county.lower()}")},
+            "name": f"{self.county.title()} County Burn Status",
+            "manufacturer": "Government of New Brunswick",
+            "model": "Burn Ban Status",
+            "entry_type": "service",
+        }
+
+    @property
+    def _county_data(self) -> dict | None:
+        """Helper to get data for this specific county."""
+        if not self.coordinator.data:
+            return None
+        return self.coordinator.data.get(self.county)
+
+    @property
+    def state(self) -> str | None:
+        """Return the state of the sensor."""
+        data = self._county_data
+        if not data:
+            return None
+        
+        category = data.get("PUBLICCATEGORY")
+        return STATUS_MAPPING.get(category, "unknown")
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon of the sensor."""
+        data = self._county_data
+        if not data:
+            return "mdi:help-network"
+            
+        category = data.get("PUBLICCATEGORY")
+        return ICON_MAPPING.get(category, "mdi:help-network")
+
+    @property
+    def extra_state_attributes(self) -> dict[str, any] | None:
+        """Return extra state attributes."""
+        data = self._county_data
+        if not data:
+            return None
+
+        category = data.get("PUBLICCATEGORY", 0)
+        valid_date_ms = data.get("VALIDDATE")
+        
+        valid_date_iso = None
+        if valid_date_ms:
+            try:
+                valid_date_iso = datetime.fromtimestamp(
+                    valid_date_ms / 1000.0, tz=timezone.utc
+                ).isoformat()
+            except Exception as err:
+                _LOGGER.warning("Failed to parse VALIDDATE timestamp: %s", err)
+
+        return {
+            "county": self.county.title(),
+            "status_text": TEXT_MAPPING.get(category, "Unknown"),
+            "status_color": COLOR_MAPPING.get(category, "unknown"),
+            "valid_date": valid_date_iso,
+            "raw_category": category,
+        }
