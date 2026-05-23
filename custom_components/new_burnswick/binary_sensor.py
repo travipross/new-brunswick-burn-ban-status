@@ -37,6 +37,17 @@ async def async_setup_entry(
 
     counties = entry.options.get(CONF_COUNTY, entry.data.get(CONF_COUNTY, []))
 
+    # CLEANUP ORPHANED ENTITIES
+    from homeassistant.helpers import entity_registry as er
+    ent_reg = er.async_get(hass)
+    entity_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
+    
+    current_county_ids = [f"{entry.entry_id}_{c.lower()}_fire_allowed" for c in counties]
+    
+    for entity_entry in entity_entries:
+        if entity_entry.domain == "binary_sensor" and entity_entry.unique_id not in current_county_ids:
+            ent_reg.async_remove(entity_entry.entity_id)
+
     entities = [
         NewBurnswickFireAllowedSensor(coordinator, entry, county)
         for county in counties
