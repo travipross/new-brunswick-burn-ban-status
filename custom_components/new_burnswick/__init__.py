@@ -12,7 +12,7 @@ from .const import API_URL, CONF_COUNTY, DOMAIN, UPDATE_INTERVAL_MINUTES
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "image", "binary_sensor"]
+PLATFORMS = ["sensor", "image", "binary_sensor", "button"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up New Brunswick Burn Ban Status from a config entry."""
