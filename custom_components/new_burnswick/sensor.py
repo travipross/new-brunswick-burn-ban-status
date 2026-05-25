@@ -126,16 +126,15 @@ class NewBurnswickSensor(CoordinatorEntity, SensorEntity):
         category = data.get("PUBLICCATEGORY", 0)
         valid_date_ms = data.get("VALIDDATE")
         
-        valid_date_iso = None
         api_valid_until = None
         if valid_date_ms:
             try:
+                # VALIDDATE in the GNB API represents the expiration time of the 
+                # current status (typically 11:00 AM Atlantic the following day).
                 valid_dt = datetime.fromtimestamp(
                     valid_date_ms / 1000.0, tz=timezone.utc
                 )
-                valid_date_iso = valid_dt.isoformat()
-                # Validity is generally 24 hours from the generation timestamp
-                api_valid_until = (valid_dt + timedelta(days=1)).isoformat()
+                api_valid_until = valid_dt.isoformat()
             except Exception as err:
                 _LOGGER.warning("Failed to parse VALIDDATE timestamp: %s", err)
 
@@ -144,7 +143,6 @@ class NewBurnswickSensor(CoordinatorEntity, SensorEntity):
             "status_text": TEXT_MAPPING.get(category, "Unknown"),
             "status_color": COLOR_MAPPING.get(category, "unknown"),
             "status_rgb": RGB_MAPPING.get(category, [128, 128, 128]),
-            "api_valid_from": valid_date_iso,
             "api_valid_until": api_valid_until,
             "raw_category": category,
             "api_payload": data,

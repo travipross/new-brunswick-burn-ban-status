@@ -136,7 +136,8 @@ class NewBurnswickCoordinator(DataUpdateCoordinator):
                 if valid_date_ms:
                     # VALIDDATE is 11:00 AM Atlantic (14:00 UTC)
                     valid_dt = datetime.fromtimestamp(valid_date_ms / 1000.0, tz=NB_TZ)
-                    if valid_dt.date() == now_nb.date() and valid_dt.hour >= UPDATE_HOUR_DATA:
+                    # Data is fresh if it is for today or later, and it's currently during or after the update hour
+                    if valid_dt.date() >= now_nb.date():
                         is_fresh = True
 
             if is_fresh:
