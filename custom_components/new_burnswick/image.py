@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MAP_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,22 +64,21 @@ class NewBurnswickMapImageEntity(CoordinatorEntity, ImageEntity):
     @property
     def image_url(self) -> str | None:
         """Return the URL of the image."""
-        return "https://www3.gnb.ca/public/fire-feu/maps/cat1.png"
+        if self.coordinator.last_update_success_time:
+            # Use the last success timestamp as a cache-buster
+            timestamp = int(self.coordinator.last_update_success_time.timestamp())
+            return f"{MAP_URL}?v={timestamp}"
+        return MAP_URL
 
     @property
     def image_last_updated(self) -> datetime | None:
         """Return the time the image was last updated."""
-        if not self.coordinator.data:
-            return None
-        
-        # Extract VALIDDATE from any county in the response (they all share the same update date/time)
-        first_county_data = next(iter(self.coordinator.data.values()), None)
-        if first_county_data:
-            valid_date_ms = first_county_data.get("VALIDDATE")
-            if valid_date_ms:
-                try:
-                    return datetime.fromtimestamp(valid_date_ms / 1000.0, tz=timezone.utc)
-                except Exception:
-                    pass
-        
         return self.coordinator.last_update_success_time
+
+    @property
+    def extra_state_attributes(self) -> dict[str, any] | None:
+        """Return extra state attributes."""
+        return {
+            "image_url": self.image_url,
+            "last_fetched": self.coordinator.last_update_success_time,
+        }

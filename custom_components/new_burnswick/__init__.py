@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.dt import utcnow
 
 from .const import (
     API_URL,
@@ -65,6 +66,7 @@ class NewBurnswickCoordinator(DataUpdateCoordinator):
         """Initialize the coordinator."""
         self.session = session
         self._next_update_callback = None
+        self.last_update_success_time: datetime | None = None
         
         super().__init__(
             hass,
@@ -98,6 +100,9 @@ class NewBurnswickCoordinator(DataUpdateCoordinator):
                 if not mapped_data:
                     raise UpdateFailed("No county data found in API response.")
                 
+                # Update the last success time
+                self.last_update_success_time = utcnow()
+
                 # Schedule the next poll based on the freshly received data
                 self._schedule_next_update(mapped_data)
                     

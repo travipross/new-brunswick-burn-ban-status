@@ -30,6 +30,7 @@ COUNTIES = [
 ]
 
 API_URL = "https://gis-erd-der.gnb.ca/gisserver/rest/services/FireWeather/BurnCategories/MapServer/0/query?where=1%3D1&outFields=NAME%2CVALIDDATE%2CPUBLICCATEGORY&returnGeometry=false&f=pjson"
+MAP_URL = "https://www3.gnb.ca/public/fire-feu/maps/cat1.png"
 
 # State & Attribute Mappings
 STATUS_MAPPING = {
