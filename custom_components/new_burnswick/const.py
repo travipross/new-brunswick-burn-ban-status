@@ -5,9 +5,7 @@ DOMAIN = "new_burnswick"
 CONF_COUNTY = "county"
 
 # The GNB GIS server generates new records around 11 AM Atlantic
-# But the public "effective" time is 2 PM Atlantic.
 UPDATE_HOUR_DATA = 11
-UPDATE_HOUR_PUBLIC = 14
 UPDATE_MINUTE = 5
 
 # List of all New Brunswick counties as returned by the GIS API (capitalized)

@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -10,7 +11,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_time
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import CONF_COUNTY, DOMAIN
 
@@ -107,12 +111,20 @@ def _next_transition_time() -> datetime.datetime:
     return min(t for t in candidates if t > now_nb)
 
 
-class NewBurnswickFireAllowedSensor(CoordinatorEntity, BinarySensorEntity):
+class NewBurnswickFireAllowedSensor(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]],
+    BinarySensorEntity,
+):
     """Binary sensor: is fire currently allowed in this county?"""
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, entry: ConfigEntry, county: str) -> None:
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        entry: ConfigEntry,
+        county: str,
+    ) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator)
         self.entry = entry
@@ -166,7 +178,7 @@ class NewBurnswickFireAllowedSensor(CoordinatorEntity, BinarySensorEntity):
         self._schedule_next_transition()
 
     @property
-    def _county_data(self) -> dict | None:
+    def _county_data(self) -> dict[str, Any] | None:
         """Return coordinator data for this county."""
         if not self.coordinator.data:
             return None
@@ -200,13 +212,13 @@ class NewBurnswickFireAllowedSensor(CoordinatorEntity, BinarySensorEntity):
         return "mdi:help-network"
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return context attributes."""
         data = self._county_data
         if not data:
             return {}
 
-        category = data.get("PUBLICCATEGORY", 0)
+        category: int = data.get("PUBLICCATEGORY", 0)
         now_nb = datetime.datetime.now(tz=NB_TZ)
         in_time_window = now_nb.time() >= datetime.time(
             _ALLOW_HOUR_START, 0

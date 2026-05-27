@@ -1,9 +1,11 @@
 """Config flow for New Brunswick Burn Ban Status integration."""
 
 import logging
+from typing import Any
 
 from homeassistant import config_entries
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 
@@ -17,12 +19,14 @@ class NewBurnswickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            counties = user_input[CONF_COUNTY]
+            counties: list[str] = user_input[CONF_COUNTY]
 
             # If "all" is checked, we select all counties
             if "all" in counties:
@@ -56,20 +60,28 @@ class NewBurnswickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
         """Get the options flow for this handler."""
-        return NewBurnswickOptionsFlowHandler()
+        return NewBurnswickOptionsFlowHandler(config_entry)
 
 
 class NewBurnswickOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for New Brunswick Burn Ban Status."""
 
-    async def async_step_init(self, user_input=None):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            counties = user_input[CONF_COUNTY]
+            counties: list[str] = user_input[CONF_COUNTY]
 
             if "all" in counties:
                 counties = COUNTIES

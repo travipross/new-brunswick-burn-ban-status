@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 from zoneinfo import ZoneInfo
 
 import aiohttp
@@ -61,13 +62,13 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class NewBurnswickCoordinator(DataUpdateCoordinator):
+class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Class to manage fetching New Brunswick Burn Ban data."""
 
     def __init__(self, hass: HomeAssistant, session: aiohttp.ClientSession) -> None:
         """Initialize the coordinator."""
         self.session = session
-        self._next_update_callback = None
+        self._next_update_callback: Any | None = None
         self.last_update_success_time: datetime | None = None
 
         super().__init__(
@@ -78,7 +79,7 @@ class NewBurnswickCoordinator(DataUpdateCoordinator):
             update_interval=None,
         )
 
-    async def _async_update_data(self) -> dict[str, dict]:
+    async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch data from the GIS server API."""
         _LOGGER.debug("Starting API fetch from GNB GIS server.")
         try:
@@ -88,15 +89,15 @@ class NewBurnswickCoordinator(DataUpdateCoordinator):
                 if response.status != 200:
                     raise UpdateFailed(f"Error fetching data: {response.status}")
 
-                data = await response.json(content_type=None)
+                data: dict[str, Any] = await response.json(content_type=None)
                 _LOGGER.debug("API fetch successful, processing features.")
-                features = data.get("features", [])
+                features: list[dict[str, Any]] = data.get("features", [])
 
                 # Map county name (in uppercase) to its attributes dictionary
-                mapped_data = {}
+                mapped_data: dict[str, dict[str, Any]] = {}
                 for feature in features:
-                    attributes = feature.get("attributes", {})
-                    name = attributes.get("NAME")
+                    attributes: dict[str, Any] = feature.get("attributes", {})
+                    name: str | None = attributes.get("NAME")
                     if name:
                         mapped_data[name.upper()] = attributes
 
@@ -117,14 +118,16 @@ class NewBurnswickCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Communicating with API failed: {err}") from err
 
     @callback
-    def _schedule_next_update(self, data: dict | None, retry: bool = False) -> None:
+    def _schedule_next_update(
+        self, data: dict[str, dict[str, Any]] | None, retry: bool = False
+    ) -> None:
         """Calculate and schedule the next polling time."""
         if self._next_update_callback:
             self._next_update_callback()
             self._next_update_callback = None
 
         now_nb = datetime.now(tz=NB_TZ)
-        next_update = None
+        next_update: datetime
 
         if retry:
             # Basic retry if something went wrong

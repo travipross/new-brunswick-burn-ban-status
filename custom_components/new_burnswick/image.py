@@ -9,7 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN, MAP_URL
 
@@ -37,12 +40,19 @@ async def async_setup_entry(
     async_add_entities([NewBurnswickMapImageEntity(hass, coordinator, entry)], True)
 
 
-class NewBurnswickMapImageEntity(CoordinatorEntity, ImageEntity):
+class NewBurnswickMapImageEntity(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]], ImageEntity
+):
     """Representation of the New Brunswick Burn Ban Map image."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, hass: HomeAssistant, coordinator, entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        entry: ConfigEntry,
+    ) -> None:
         """Initialize the image entity."""
         ImageEntity.__init__(self, hass)
         CoordinatorEntity.__init__(self, coordinator)

@@ -1,13 +1,17 @@
 """Button platform for New Brunswick Burn Ban Status."""
 
 import logging
+from typing import Any
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
 
@@ -38,14 +42,20 @@ async def async_setup_entry(
     async_add_entities([NewBurnswickRefreshButton(coordinator, entry)], True)
 
 
-class NewBurnswickRefreshButton(CoordinatorEntity, ButtonEntity):
+class NewBurnswickRefreshButton(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]], ButtonEntity
+):
     """Representation of a refresh button for the Burn Ban Status."""
 
     _attr_has_entity_name = True
     _attr_name = "Refresh Data"
     _attr_icon = "mdi:refresh"
 
-    def __init__(self, coordinator, entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        entry: ConfigEntry,
+    ) -> None:
         """Initialize the button."""
         super().__init__(coordinator)
         self.entry = entry

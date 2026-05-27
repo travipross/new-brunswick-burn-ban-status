@@ -34,13 +34,16 @@ class MockBase:
 
 class MockCoordinator(MockBase):
     """Mock DataUpdateCoordinator."""
-
     def __init__(self, hass, logger, name, update_interval=None):
         self.hass = hass
         self.logger = logger
         self.name = name
         self.update_interval = update_interval
         self.data = None
+
+    def __class_getitem__(cls, _item):
+        return cls
+
 
 
 for module in mock_modules:

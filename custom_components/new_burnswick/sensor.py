@@ -9,7 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     COLOR_MAPPING,
@@ -65,13 +68,20 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class NewBurnswickSensor(CoordinatorEntity, SensorEntity):
+class NewBurnswickSensor(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]], SensorEntity
+):
     """Representation of a New Brunswick Burn Ban Status sensor."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "burn_ban_status"
 
-    def __init__(self, coordinator, entry: ConfigEntry, county: str) -> None:
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        entry: ConfigEntry,
+        county: str,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entry = entry
@@ -93,7 +103,7 @@ class NewBurnswickSensor(CoordinatorEntity, SensorEntity):
         }
 
     @property
-    def _county_data(self) -> dict | None:
+    def _county_data(self) -> dict[str, Any] | None:
         """Helper to get data for this specific county."""
         if not self.coordinator.data:
             return None
@@ -106,7 +116,9 @@ class NewBurnswickSensor(CoordinatorEntity, SensorEntity):
         if not data:
             return None
 
-        category = data.get("PUBLICCATEGORY")
+        category: int | None = data.get("PUBLICCATEGORY")
+        if category is None:
+            return "unknown"
         return STATUS_MAPPING.get(category, "unknown")
 
     @property
@@ -116,7 +128,9 @@ class NewBurnswickSensor(CoordinatorEntity, SensorEntity):
         if not data:
             return "mdi:help-network"
 
-        category = data.get("PUBLICCATEGORY")
+        category: int | None = data.get("PUBLICCATEGORY")
+        if category is None:
+            return "mdi:help-network"
         return ICON_MAPPING.get(category, "mdi:help-network")
 
     @property
