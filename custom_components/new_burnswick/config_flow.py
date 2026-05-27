@@ -69,7 +69,7 @@ class NewBurnswickOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
+        self._config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -86,8 +86,8 @@ class NewBurnswickOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data={CONF_COUNTY: counties})
 
         # Pre-select already configured counties
-        current_counties = self.config_entry.options.get(
-            CONF_COUNTY, self.config_entry.data.get(CONF_COUNTY, [])
+        current_counties = self._config_entry.options.get(
+            CONF_COUNTY, self._config_entry.data.get(CONF_COUNTY, [])
         )
 
         county_options = {"all": "Select All"}
