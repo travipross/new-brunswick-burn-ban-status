@@ -5,7 +5,7 @@ description = "New Brunswick Burn Ban Status for Home Assistant"
 authors = [{ name = "travipross" }]
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["homeassistant"]
 
 [dependency-groups]
 dev = [
@@ -21,14 +21,14 @@ line-length = 88
 
 [tool.ruff.lint]
 select = [
-    "B",   # flake8-bugbear
-    "C",   # flake8-comprehensions
-    "E",   # pycodestyle errors
-    "F",   # pyflakes
-    "I",   # isort
-    "PL",  # pylint
-    "UP",  # pyupgrade
-    "W",   # pycodestyle warnings
+    "B",  # flake8-bugbear
+    "C",  # flake8-comprehensions
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+    "PL", # pylint
+    "UP", # pyupgrade
+    "W",  # pycodestyle warnings
 ]
 ignore = [
     "PLR0913", # Too many arguments to function call
