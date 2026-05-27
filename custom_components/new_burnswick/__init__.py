@@ -13,8 +13,10 @@ from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utcnow
 
+from .cleanup import async_cleanup_registries
 from .const import (
     API_URL,
+    CONF_COUNTY,
     DOMAIN,
     UPDATE_HOUR_DATA,
     UPDATE_MINUTE,
@@ -40,6 +42,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    # Clean up orphaned devices/entities from registry
+    counties = entry.options.get(CONF_COUNTY, entry.data.get(CONF_COUNTY, []))
+    await async_cleanup_registries(hass, entry, counties)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

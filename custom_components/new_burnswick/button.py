@@ -6,7 +6,6 @@ from typing import Any
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -25,19 +24,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the button platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-
-    # CLEANUP ORPHANED ENTITIES
-    ent_reg = er.async_get(hass)
-    entity_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
-
-    refresh_unique_id = f"{entry.entry_id}_refresh_button"
-
-    for entity_entry in entity_entries:
-        if (
-            entity_entry.domain == "button"
-            and entity_entry.unique_id != refresh_unique_id
-        ):
-            ent_reg.async_remove(entity_entry.entity_id)
 
     async_add_entities([NewBurnswickRefreshButton(coordinator, entry)], True)
 

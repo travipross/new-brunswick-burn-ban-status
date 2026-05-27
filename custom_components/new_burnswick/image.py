@@ -7,7 +7,6 @@ from typing import Any
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -26,16 +25,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the image platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-
-    # CLEANUP ORPHANED ENTITIES
-    ent_reg = er.async_get(hass)
-    entity_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
-
-    map_unique_id = f"{entry.entry_id}_burn_ban_map"
-
-    for entity_entry in entity_entries:
-        if entity_entry.domain == "image" and entity_entry.unique_id != map_unique_id:
-            ent_reg.async_remove(entity_entry.entity_id)
 
     async_add_entities([NewBurnswickMapImageEntity(hass, coordinator, entry)], True)
 

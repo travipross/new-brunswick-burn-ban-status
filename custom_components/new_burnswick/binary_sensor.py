@@ -8,7 +8,6 @@ from zoneinfo import ZoneInfo
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.update_coordinator import (
@@ -44,21 +43,6 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     counties = entry.options.get(CONF_COUNTY, entry.data.get(CONF_COUNTY, []))
-
-    # CLEANUP ORPHANED ENTITIES
-    ent_reg = er.async_get(hass)
-    entity_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
-
-    current_county_ids = [
-        f"{entry.entry_id}_{c.lower()}_fire_allowed" for c in counties
-    ]
-
-    for entity_entry in entity_entries:
-        if (
-            entity_entry.domain == "binary_sensor"
-            and entity_entry.unique_id not in current_county_ids
-        ):
-            ent_reg.async_remove(entity_entry.entity_id)
 
     entities = [
         NewBurnswickFireAllowedSensor(coordinator, entry, county) for county in counties

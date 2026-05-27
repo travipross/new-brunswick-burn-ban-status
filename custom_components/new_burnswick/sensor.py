@@ -7,7 +7,6 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -37,32 +36,6 @@ async def async_setup_entry(
 
     # Read selected counties from options first, falling back to data
     counties = entry.options.get(CONF_COUNTY, entry.data.get(CONF_COUNTY, []))
-
-    # 1. CLEANUP ORPHANED ENTITIES
-    ent_reg = er.async_get(hass)
-    entity_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
-
-    current_county_ids = [f"{entry.entry_id}_{c.lower()}_status" for c in counties]
-
-    for entity_entry in entity_entries:
-        if (
-            entity_entry.domain == "sensor"
-            and entity_entry.unique_id not in current_county_ids
-        ):
-            ent_reg.async_remove(entity_entry.entity_id)
-
-    # 2. CLEANUP ORPHANED DEVICES
-    dev_reg = dr.async_get(hass)
-    device_entries = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
-
-    current_device_ids = [f"{entry.entry_id}_{c.lower()}" for c in counties]
-    current_device_ids.append(f"{entry.entry_id}_map")
-
-    for device_entry in device_entries:
-        for identifier in device_entry.identifiers:
-            if identifier[0] == DOMAIN:
-                if identifier[1] not in current_device_ids:
-                    dev_reg.async_remove_device(device_entry.id)
 
     entities = [NewBurnswickSensor(coordinator, entry, county) for county in counties]
     async_add_entities(entities, True)
