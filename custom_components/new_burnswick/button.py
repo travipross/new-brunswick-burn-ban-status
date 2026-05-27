@@ -1,12 +1,21 @@
 """Button platform for New Brunswick Burn Ban Status."""
+
+import logging
+from typing import Any
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -16,31 +25,27 @@ async def async_setup_entry(
     """Set up the button platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    # CLEANUP ORPHANED ENTITIES
-    ent_reg = er.async_get(hass)
-    entity_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
-    
-    refresh_unique_id = f"{entry.entry_id}_refresh_button"
-    
-    for entity_entry in entity_entries:
-        if entity_entry.domain == "button" and entity_entry.unique_id != refresh_unique_id:
-            ent_reg.async_remove(entity_entry.entity_id)
-
     async_add_entities([NewBurnswickRefreshButton(coordinator, entry)], True)
 
 
-class NewBurnswickRefreshButton(CoordinatorEntity, ButtonEntity):
+class NewBurnswickRefreshButton(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]], ButtonEntity
+):
     """Representation of a refresh button for the Burn Ban Status."""
 
     _attr_has_entity_name = True
     _attr_name = "Refresh Data"
     _attr_icon = "mdi:refresh"
 
-    def __init__(self, coordinator, entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        entry: ConfigEntry,
+    ) -> None:
         """Initialize the button."""
         super().__init__(coordinator)
         self.entry = entry
-        
+
         # Unique ID for the button
         self._attr_unique_id = f"{entry.entry_id}_refresh_button"
 
@@ -55,6 +60,5 @@ class NewBurnswickRefreshButton(CoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        from .__init__ import _LOGGER
         _LOGGER.debug("Manual refresh triggered via button.")
         await self.coordinator.async_request_refresh()

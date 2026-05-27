@@ -1,43 +1,45 @@
 """Config flow for New Brunswick Burn Ban Status integration."""
+
 import logging
-import voluptuous as vol
+from typing import Any
 
 from homeassistant import config_entries
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 
 from .const import CONF_COUNTY, COUNTIES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class NewBurnswickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for New Brunswick Burn Ban Status."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            counties = user_input[CONF_COUNTY]
-            
+            counties: list[str] = user_input[CONF_COUNTY]
+
             # If "all" is checked, we select all counties
             if "all" in counties:
                 counties = COUNTIES
-            
-            if not counties:
-                errors["base"] = "no_counties_selected"
-            else:
-                await self.async_set_unique_id("new_burnswick_config")
-                self._abort_if_unique_id_configured()
 
-                # Save the processed counties list in data
-                user_input[CONF_COUNTY] = counties
-                return self.async_create_entry(
-                    title="New Brunswick Burn Ban Status",
-                    data=user_input
-                )
+            await self.async_set_unique_id("new_burnswick_config")
+            self._abort_if_unique_id_configured()
+
+            # Save the processed counties list in data
+            user_input[CONF_COUNTY] = counties
+            return self.async_create_entry(
+                title="New Brunswick Burn Ban Status", data=user_input
+            )
 
         # Build options dictionary with a "Select All" entry
         county_options = {"all": "Select All"}
@@ -55,31 +57,33 @@ class NewBurnswickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
         """Get the options flow for this handler."""
-        return NewBurnswickOptionsFlowHandler()
+        return NewBurnswickOptionsFlowHandler(config_entry)
 
 
 class NewBurnswickOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for New Brunswick Burn Ban Status."""
 
-    async def async_step_init(self, user_input=None):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            counties = user_input[CONF_COUNTY]
-            
+            counties: list[str] = user_input[CONF_COUNTY]
+
             if "all" in counties:
                 counties = COUNTIES
-                
-            if not counties:
-                errors["base"] = "no_counties_selected"
-            else:
-                return self.async_create_entry(
-                    title="",
-                    data={CONF_COUNTY: counties}
-                )
+
+            return self.async_create_entry(title="", data={CONF_COUNTY: counties})
 
         # Pre-select already configured counties
         current_counties = self.config_entry.options.get(
