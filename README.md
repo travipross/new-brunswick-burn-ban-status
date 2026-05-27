@@ -98,3 +98,30 @@ automation:
 ## Data Source
 
 All data is sourced from the Government of New Brunswick's public GIS REST API and map service. This integration is not affiliated with or endorsed by the Government of New Brunswick.
+
+## Development
+
+This integration uses [uv](https://docs.astral.sh/uv/) for dependency management and local development.
+
+### Setup
+
+1. Install `uv`.
+2. Sync the development environment:
+   ```bash
+   uv sync --dev
+   ```
+
+### Linting
+
+Run [Ruff](https://docs.astral.sh/ruff/) to check for linting and formatting issues:
+```bash
+uv run ruff check .
+uv run ruff format .
+```
+
+### Testing
+
+Run [Pytest](https://docs.pytest.org/) to execute the test suite:
+```bash
+uv run pytest
+```

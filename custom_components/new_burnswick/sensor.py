@@ -1,6 +1,8 @@
 """Sensor platform for New Brunswick Burn Ban Status."""
-from datetime import datetime, timedelta, timezone
+
+from datetime import UTC, datetime
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -21,6 +23,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -28,37 +31,37 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    
+
     # Read selected counties from options first, falling back to data
     counties = entry.options.get(CONF_COUNTY, entry.data.get(CONF_COUNTY, []))
 
     # 1. CLEANUP ORPHANED ENTITIES
     ent_reg = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
-    
+
     current_county_ids = [f"{entry.entry_id}_{c.lower()}_status" for c in counties]
-    
+
     for entity_entry in entity_entries:
-        if entity_entry.domain == "sensor" and entity_entry.unique_id not in current_county_ids:
+        if (
+            entity_entry.domain == "sensor"
+            and entity_entry.unique_id not in current_county_ids
+        ):
             ent_reg.async_remove(entity_entry.entity_id)
 
     # 2. CLEANUP ORPHANED DEVICES
     dev_reg = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
-    
+
     current_device_ids = [f"{entry.entry_id}_{c.lower()}" for c in counties]
-    current_device_ids.append(f"{entry.entry_id}_map") 
-    
+    current_device_ids.append(f"{entry.entry_id}_map")
+
     for device_entry in device_entries:
         for identifier in device_entry.identifiers:
             if identifier[0] == DOMAIN:
                 if identifier[1] not in current_device_ids:
                     dev_reg.async_remove_device(device_entry.id)
 
-    entities = [
-        NewBurnswickSensor(coordinator, entry, county)
-        for county in counties
-    ]
+    entities = [NewBurnswickSensor(coordinator, entry, county) for county in counties]
     async_add_entities(entities, True)
 
 
@@ -73,13 +76,13 @@ class NewBurnswickSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entry = entry
         self.county = county.upper()
-        
+
         # Unique ID for the sensor
         self._attr_unique_id = f"{entry.entry_id}_{self.county.lower()}_status"
-        
+
         # Setting name to None ensures it takes the device name as the entity name
         self._attr_name = None
-        
+
         # Device info to group entities by county
         self._attr_device_info = {
             "identifiers": {(DOMAIN, f"{entry.entry_id}_{self.county.lower()}")},
@@ -102,7 +105,7 @@ class NewBurnswickSensor(CoordinatorEntity, SensorEntity):
         data = self._county_data
         if not data:
             return None
-        
+
         category = data.get("PUBLICCATEGORY")
         return STATUS_MAPPING.get(category, "unknown")
 
@@ -112,12 +115,12 @@ class NewBurnswickSensor(CoordinatorEntity, SensorEntity):
         data = self._county_data
         if not data:
             return "mdi:help-network"
-            
+
         category = data.get("PUBLICCATEGORY")
         return ICON_MAPPING.get(category, "mdi:help-network")
 
     @property
-    def extra_state_attributes(self) -> dict[str, any] | None:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra state attributes."""
         data = self._county_data
         if not data:
@@ -125,15 +128,13 @@ class NewBurnswickSensor(CoordinatorEntity, SensorEntity):
 
         category = data.get("PUBLICCATEGORY", 0)
         valid_date_ms = data.get("VALIDDATE")
-        
+
         api_valid_until = None
         if valid_date_ms:
             try:
-                # VALIDDATE in the GNB API represents the expiration time of the 
+                # VALIDDATE in the GNB API represents the expiration time of the
                 # current status (typically 11:00 AM Atlantic the following day).
-                valid_dt = datetime.fromtimestamp(
-                    valid_date_ms / 1000.0, tz=timezone.utc
-                )
+                valid_dt = datetime.fromtimestamp(valid_date_ms / 1000.0, tz=UTC)
                 api_valid_until = valid_dt.isoformat()
             except Exception as err:
                 _LOGGER.warning("Failed to parse VALIDDATE timestamp: %s", err)

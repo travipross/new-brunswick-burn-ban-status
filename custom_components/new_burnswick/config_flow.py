@@ -1,14 +1,16 @@
 """Config flow for New Brunswick Burn Ban Status integration."""
+
 import logging
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 
 from .const import CONF_COUNTY, COUNTIES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class NewBurnswickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for New Brunswick Burn Ban Status."""
@@ -21,11 +23,11 @@ class NewBurnswickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             counties = user_input[CONF_COUNTY]
-            
+
             # If "all" is checked, we select all counties
             if "all" in counties:
                 counties = COUNTIES
-            
+
             if not counties:
                 errors["base"] = "no_counties_selected"
             else:
@@ -35,8 +37,7 @@ class NewBurnswickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # Save the processed counties list in data
                 user_input[CONF_COUNTY] = counties
                 return self.async_create_entry(
-                    title="New Brunswick Burn Ban Status",
-                    data=user_input
+                    title="New Brunswick Burn Ban Status", data=user_input
                 )
 
         # Build options dictionary with a "Select All" entry
@@ -69,17 +70,14 @@ class NewBurnswickOptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             counties = user_input[CONF_COUNTY]
-            
+
             if "all" in counties:
                 counties = COUNTIES
-                
+
             if not counties:
                 errors["base"] = "no_counties_selected"
             else:
-                return self.async_create_entry(
-                    title="",
-                    data={CONF_COUNTY: counties}
-                )
+                return self.async_create_entry(title="", data={CONF_COUNTY: counties})
 
         # Pre-select already configured counties
         current_counties = self.config_entry.options.get(

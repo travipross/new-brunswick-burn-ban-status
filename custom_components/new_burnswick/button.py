@@ -1,4 +1,7 @@
 """Button platform for New Brunswick Burn Ban Status."""
+
+import logging
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -7,6 +10,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -19,11 +25,14 @@ async def async_setup_entry(
     # CLEANUP ORPHANED ENTITIES
     ent_reg = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
-    
+
     refresh_unique_id = f"{entry.entry_id}_refresh_button"
-    
+
     for entity_entry in entity_entries:
-        if entity_entry.domain == "button" and entity_entry.unique_id != refresh_unique_id:
+        if (
+            entity_entry.domain == "button"
+            and entity_entry.unique_id != refresh_unique_id
+        ):
             ent_reg.async_remove(entity_entry.entity_id)
 
     async_add_entities([NewBurnswickRefreshButton(coordinator, entry)], True)
@@ -40,7 +49,7 @@ class NewBurnswickRefreshButton(CoordinatorEntity, ButtonEntity):
         """Initialize the button."""
         super().__init__(coordinator)
         self.entry = entry
-        
+
         # Unique ID for the button
         self._attr_unique_id = f"{entry.entry_id}_refresh_button"
 
@@ -55,6 +64,5 @@ class NewBurnswickRefreshButton(CoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        from .__init__ import _LOGGER
         _LOGGER.debug("Manual refresh triggered via button.")
         await self.coordinator.async_request_refresh()
