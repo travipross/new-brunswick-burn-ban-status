@@ -13,8 +13,10 @@ mock_modules = [
     "homeassistant.components.button",
     "homeassistant.config_entries",
     "homeassistant.core",
+    "homeassistant.data_entry_flow",
     "homeassistant.helpers",
     "homeassistant.helpers.aiohttp_client",
+    "homeassistant.helpers.config_validation",
     "homeassistant.helpers.device_registry",
     "homeassistant.helpers.entity_platform",
     "homeassistant.helpers.entity_registry",
@@ -22,6 +24,7 @@ mock_modules = [
     "homeassistant.helpers.update_coordinator",
     "homeassistant.util",
     "homeassistant.util.dt",
+    "voluptuous",
 ]
 
 
@@ -46,13 +49,41 @@ class MockCoordinator(MockBase):
         return cls
 
 
+class MockConfigFlow(MockBase):
+    """Mock ConfigFlow base class."""
+
+    def __init_subclass__(cls, **kwargs):
+        pass
+
+
+class MockOptionsFlow(MockBase):
+    """Mock OptionsFlow base class."""
+
+
 for module in mock_modules:
     sys.modules[module] = MagicMock()
+
+# Link top-level homeassistant module attrs to mocked submodules.
+sys.modules["homeassistant"].config_entries = sys.modules[
+    "homeassistant.config_entries"
+]
+sys.modules["homeassistant"].core = sys.modules["homeassistant.core"]
+sys.modules["homeassistant"].data_entry_flow = sys.modules[
+    "homeassistant.data_entry_flow"
+]
+sys.modules["homeassistant"].helpers = sys.modules["homeassistant.helpers"]
 
 # Specifically mock classes and functions
 sys.modules[
     "homeassistant.helpers.update_coordinator"
 ].DataUpdateCoordinator = MockCoordinator
+sys.modules["homeassistant.config_entries"].ConfigFlow = MockConfigFlow
+sys.modules["homeassistant.config_entries"].OptionsFlow = MockOptionsFlow
+sys.modules["homeassistant.config_entries"].ConfigEntry = MagicMock
+sys.modules["homeassistant.data_entry_flow"].FlowResult = dict
+sys.modules["homeassistant.helpers.config_validation"].multi_select = lambda options: (
+    options
+)
 
 
 class UpdateFailed(Exception):
