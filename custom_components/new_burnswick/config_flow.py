@@ -32,17 +32,14 @@ class NewBurnswickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if "all" in counties:
                 counties = COUNTIES
 
-            if not counties:
-                errors["base"] = "no_counties_selected"
-            else:
-                await self.async_set_unique_id("new_burnswick_config")
-                self._abort_if_unique_id_configured()
+            await self.async_set_unique_id("new_burnswick_config")
+            self._abort_if_unique_id_configured()
 
-                # Save the processed counties list in data
-                user_input[CONF_COUNTY] = counties
-                return self.async_create_entry(
-                    title="New Brunswick Burn Ban Status", data=user_input
-                )
+            # Save the processed counties list in data
+            user_input[CONF_COUNTY] = counties
+            return self.async_create_entry(
+                title="New Brunswick Burn Ban Status", data=user_input
+            )
 
         # Build options dictionary with a "Select All" entry
         county_options = {"all": "Select All"}
@@ -86,10 +83,7 @@ class NewBurnswickOptionsFlowHandler(config_entries.OptionsFlow):
             if "all" in counties:
                 counties = COUNTIES
 
-            if not counties:
-                errors["base"] = "no_counties_selected"
-            else:
-                return self.async_create_entry(title="", data={CONF_COUNTY: counties})
+            return self.async_create_entry(title="", data={CONF_COUNTY: counties})
 
         # Pre-select already configured counties
         current_counties = self.config_entry.options.get(

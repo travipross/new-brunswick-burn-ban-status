@@ -35,8 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass)
     coordinator = NewBurnswickCoordinator(hass, session)
 
-    # Fetch initial data so we fail early if config is invalid or server is down
-    await coordinator.async_config_entry_first_refresh()
+    # Perform initial refresh but don't block setup if it fails
+    # This ensures core entities (map, refresh button) are always created
+    await coordinator.async_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
