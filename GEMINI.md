@@ -23,3 +23,4 @@ To maintain the technical integrity of this integration, you MUST run the follow
 - **Dependency Management:** Use `uv` for all local development tasks.
 - **Environment Setup:** If new dependencies are added, run `uv sync --dev`.
 - **Testing:** All core logic (coordinator, helpers, constants) should have corresponding tests in the `tests/` directory.
+- **Committing:** Follow conventional commit format, with appropriate prefixes for commit short messages. Add extra detail as multi-line content where appropriate
