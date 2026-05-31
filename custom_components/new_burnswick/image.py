@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -62,6 +62,12 @@ class NewBurnswickMapImageEntity(
             "model": "Burn Ban Map",
             "entry_type": "service",
         }
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._cached_image = None
+        super()._handle_coordinator_update()
 
     @property
     def image_url(self) -> str | None:

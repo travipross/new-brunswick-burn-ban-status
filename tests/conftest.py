@@ -35,6 +35,50 @@ class MockBase:
         pass
 
 
+class MockEntity(MockBase):
+    """Mock Entity base class."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.hass = None
+        self._attr_unique_id = None
+        self._attr_name = None
+        self._attr_device_info = None
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self._attr_unique_id
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return self._attr_device_info
+
+
+class MockCoordinatorEntity(MockEntity):
+    """Mock CoordinatorEntity."""
+
+    def __init__(self, coordinator, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.coordinator = coordinator
+
+    def __class_getitem__(cls, _item):
+        return cls
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        pass
+
+
+class MockImageEntity(MockEntity):
+    """Mock ImageEntity."""
+
+
+class MockButtonEntity(MockEntity):
+    """Mock ButtonEntity."""
+
+
 class MockCoordinator(MockBase):
     """Mock DataUpdateCoordinator."""
 
@@ -77,6 +121,11 @@ sys.modules["homeassistant"].helpers = sys.modules["homeassistant.helpers"]
 sys.modules[
     "homeassistant.helpers.update_coordinator"
 ].DataUpdateCoordinator = MockCoordinator
+sys.modules[
+    "homeassistant.helpers.update_coordinator"
+].CoordinatorEntity = MockCoordinatorEntity
+sys.modules["homeassistant.components.image"].ImageEntity = MockImageEntity
+sys.modules["homeassistant.components.button"].ButtonEntity = MockButtonEntity
 sys.modules["homeassistant.config_entries"].ConfigFlow = MockConfigFlow
 sys.modules["homeassistant.config_entries"].OptionsFlow = MockOptionsFlow
 sys.modules["homeassistant.config_entries"].ConfigEntry = MagicMock
