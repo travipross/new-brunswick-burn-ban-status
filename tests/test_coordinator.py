@@ -107,3 +107,69 @@ def test_schedule_next_update_stale(mock_hass, mock_session):
     ) as mock_track:
         coordinator._schedule_next_update(stale_data)
         assert mock_track.called
+
+
+def test_schedule_next_update_bug_regression(mock_hass, mock_session):
+    """
+    Regression test for the bug where data expiring soon triggers correct next poll.
+    """
+    coordinator = NewBurnswickCoordinator(mock_hass, mock_session)
+
+    # Mock 'now' to be Tuesday, June 2, 2026, 11:05 AM Atlantic
+    mock_now = datetime(2026, 6, 2, 11, 5, 0, tzinfo=NB_TZ)
+
+    # Mock VALIDDATE to be Tuesday, June 2, 2026, 11:00 AM Atlantic (Expired)
+    valid_date = datetime(2026, 6, 2, 11, 0, 0, tzinfo=NB_TZ)
+    valid_date_ms = int(valid_date.timestamp() * 1000)
+
+    data = {"YORK": {"VALIDDATE": valid_date_ms}}
+
+    with patch("custom_components.new_burnswick.datetime") as mock_datetime:
+        mock_datetime.now.return_value = mock_now
+        mock_datetime.combine.side_effect = datetime.combine
+        mock_datetime.min = datetime.min
+        mock_datetime.fromtimestamp.side_effect = datetime.fromtimestamp
+
+        with patch(
+            "custom_components.new_burnswick.async_track_point_in_time"
+        ) as mock_track:
+            coordinator._schedule_next_update(data)
+
+            args, _ = mock_track.call_args
+            scheduled_time = args[2]
+
+            # Since valid_dt (11:00) <= now (11:05), it should retry in 15 mins.
+            expected_retry = mock_now + timedelta(minutes=15)
+            assert scheduled_time == expected_retry
+
+
+def test_schedule_next_update_future_validdate(mock_hass, mock_session):
+    """
+    Test that data expiring in the future schedules for VALIDDATE + 5 minutes.
+    """
+    coordinator = NewBurnswickCoordinator(mock_hass, mock_session)
+
+    # Mock 'now' to be Tuesday 10:00 AM
+    mock_now = datetime(2026, 6, 2, 10, 0, 0, tzinfo=NB_TZ)
+
+    # Mock VALIDDATE to be Tuesday 11:00 AM (In future)
+    valid_date = datetime(2026, 6, 2, 11, 0, 0, tzinfo=NB_TZ)
+    valid_date_ms = int(valid_date.timestamp() * 1000)
+
+    data = {"YORK": {"VALIDDATE": valid_date_ms}}
+
+    with patch("custom_components.new_burnswick.datetime") as mock_datetime:
+        mock_datetime.now.return_value = mock_now
+        mock_datetime.fromtimestamp.side_effect = datetime.fromtimestamp
+
+        with patch(
+            "custom_components.new_burnswick.async_track_point_in_time"
+        ) as mock_track:
+            coordinator._schedule_next_update(data)
+
+            args, _ = mock_track.call_args
+            scheduled_time = args[2]
+
+            # Since valid_dt (11:00) > now (10:00), it should schedule for 11:05 AM
+            expected_next = valid_date + timedelta(minutes=5)
+            assert scheduled_time == expected_next
