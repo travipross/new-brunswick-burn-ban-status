@@ -75,6 +75,7 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         self.session = session
         self._next_update_callback: Any | None = None
         self.last_update_success_time: datetime | None = None
+        self.next_update_at: datetime | None = None
 
         super().__init__(
             hass,
@@ -165,14 +166,11 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 next_update.isoformat(),
             )
 
-        self._next_update_callback = async_track_point_in_time(
-            self.hass, self._handle_scheduled_update, next_update
-        )
-
         _LOGGER.debug(
             "Scheduling next API poll for: %s Atlantic", next_update.isoformat()
         )
 
+        self.next_update_at = next_update
         self._next_update_callback = async_track_point_in_time(
             self.hass, self._handle_scheduled_update, next_update
         )

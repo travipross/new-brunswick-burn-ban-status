@@ -4,8 +4,9 @@ from datetime import UTC, datetime
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -38,7 +39,41 @@ async def async_setup_entry(
     counties = entry.options.get(CONF_COUNTY, entry.data.get(CONF_COUNTY, []))
 
     entities = [NewBurnswickSensor(coordinator, entry, county) for county in counties]
+    entities.append(NewBurnswickNextUpdateSensor(coordinator, entry))
     async_add_entities(entities, True)
+
+
+class NewBurnswickNextUpdateSensor(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]], SensorEntity
+):
+    """Diagnostic sensor to show the next scheduled update time."""
+
+    _attr_has_entity_name = True
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "next_update"
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_next_update"
+
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": "New Brunswick Burn Ban Status",
+            "manufacturer": "Government of New Brunswick",
+            "model": "Burn Ban Status",
+            "entry_type": "service",
+        }
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the state of the sensor."""
+        return getattr(self.coordinator, "next_update_at", None)
 
 
 class NewBurnswickSensor(

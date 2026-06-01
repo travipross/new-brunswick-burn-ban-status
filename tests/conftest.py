@@ -22,6 +22,7 @@ mock_modules = [
     "homeassistant.helpers.entity_registry",
     "homeassistant.helpers.event",
     "homeassistant.helpers.update_coordinator",
+    "homeassistant.const",
     "homeassistant.util",
     "homeassistant.util.dt",
     "voluptuous",
@@ -41,9 +42,20 @@ class MockEntity(MockBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.hass = None
-        self._attr_unique_id = None
-        self._attr_name = None
-        self._attr_device_info = None
+        if not hasattr(self, "_attr_unique_id"):
+            self._attr_unique_id = None
+        if not hasattr(self, "_attr_name"):
+            self._attr_name = None
+        if not hasattr(self, "_attr_device_info"):
+            self._attr_device_info = None
+        if not hasattr(self, "_attr_device_class"):
+            self._attr_device_class = None
+        if not hasattr(self, "_attr_entity_category"):
+            self._attr_entity_category = None
+        if not hasattr(self, "_attr_translation_key"):
+            self._attr_translation_key = None
+        if not hasattr(self, "_attr_has_entity_name"):
+            self._attr_has_entity_name = False
 
     @property
     def unique_id(self):
@@ -54,6 +66,26 @@ class MockEntity(MockBase):
     def device_info(self):
         """Return device info."""
         return self._attr_device_info
+
+    @property
+    def device_class(self):
+        """Return device class."""
+        return self._attr_device_class
+
+    @property
+    def entity_category(self):
+        """Return entity category."""
+        return self._attr_entity_category
+
+    @property
+    def translation_key(self):
+        """Return translation key."""
+        return self._attr_translation_key
+
+    @property
+    def has_entity_name(self):
+        """Return has entity name."""
+        return self._attr_has_entity_name
 
 
 class MockCoordinatorEntity(MockEntity):
@@ -77,6 +109,10 @@ class MockImageEntity(MockEntity):
 
 class MockButtonEntity(MockEntity):
     """Mock ButtonEntity."""
+
+
+class MockSensorEntity(MockEntity):
+    """Mock SensorEntity."""
 
 
 class MockCoordinator(MockBase):
@@ -117,6 +153,21 @@ sys.modules["homeassistant"].data_entry_flow = sys.modules[
 ]
 sys.modules["homeassistant"].helpers = sys.modules["homeassistant.helpers"]
 
+
+# Mock Constants and Enums
+class MockEntityCategory:
+    DIAGNOSTIC = "diagnostic"
+    CONFIG = "config"
+
+
+class MockSensorDeviceClass:
+    TIMESTAMP = "timestamp"
+    TEMPERATURE = "temperature"
+
+
+sys.modules["homeassistant.const"].EntityCategory = MockEntityCategory
+sys.modules["homeassistant.components.sensor"].SensorDeviceClass = MockSensorDeviceClass
+
 # Specifically mock classes and functions
 sys.modules[
     "homeassistant.helpers.update_coordinator"
@@ -126,6 +177,7 @@ sys.modules[
 ].CoordinatorEntity = MockCoordinatorEntity
 sys.modules["homeassistant.components.image"].ImageEntity = MockImageEntity
 sys.modules["homeassistant.components.button"].ButtonEntity = MockButtonEntity
+sys.modules["homeassistant.components.sensor"].SensorEntity = MockSensorEntity
 sys.modules["homeassistant.config_entries"].ConfigFlow = MockConfigFlow
 sys.modules["homeassistant.config_entries"].OptionsFlow = MockOptionsFlow
 sys.modules["homeassistant.config_entries"].ConfigEntry = MagicMock
