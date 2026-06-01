@@ -129,7 +129,7 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         self, data: dict[str, dict[str, Any]] | None, retry: bool = False
     ) -> None:
         """Calculate and schedule the next polling time.
-        
+
         Strategy:
         - Poll every day at 11:05 AM to confirm data for tomorrow is available.
         - Data is only considered "complete" if VALIDDATE is tomorrow or later,
@@ -149,14 +149,16 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             # Check if data contains a valid update for tomorrow or later
             is_fresh = False
             tomorrow_nb = now_nb.date() + timedelta(days=1)
-            
+
             if data:
                 # All counties share the same VALIDDATE
                 first_county = next(iter(data.values()))
                 valid_date_ms = first_county.get("VALIDDATE")
                 if valid_date_ms:
                     # VALIDDATE is 11:00 AM Atlantic (14:00 UTC)
-                    valid_dt = datetime.fromtimestamp(valid_date_ms / 1000.0, tz=NB_TZ)
+                    valid_dt = datetime.fromtimestamp(
+                        valid_date_ms / 1000.0, tz=NB_TZ
+                    )
                     # Data is fresh only if VALIDDATE is for tomorrow or later.
                     # This ensures we always poll again tomorrow at 11:05 AM
                     # to confirm the next day's data has been published.
