@@ -128,7 +128,13 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     def _schedule_next_update(
         self, data: dict[str, dict[str, Any]] | None, retry: bool = False
     ) -> None:
-        """Calculate and schedule the next polling time."""
+        """Calculate and schedule the next polling time.
+        
+        Strategy:
+        - Poll every day at 11:05 AM to confirm data for tomorrow is available.
+        - Data is only considered "complete" if VALIDDATE is tomorrow or later,
+          ensuring we poll every day to confirm the next day's update.
+        """
         if self._next_update_callback:
             self._next_update_callback()
             self._next_update_callback = None
@@ -140,9 +146,10 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             # Basic retry if something went wrong
             next_update = now_nb + timedelta(minutes=15)
         else:
-            # Determine if the data we just got is "current"
-            # (from today's update window)
+            # Check if data contains a valid update for tomorrow or later
             is_fresh = False
+            tomorrow_nb = now_nb.date() + timedelta(days=1)
+            
             if data:
                 # All counties share the same VALIDDATE
                 first_county = next(iter(data.values()))
@@ -150,27 +157,28 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 if valid_date_ms:
                     # VALIDDATE is 11:00 AM Atlantic (14:00 UTC)
                     valid_dt = datetime.fromtimestamp(valid_date_ms / 1000.0, tz=NB_TZ)
-                    # Data is fresh if it is for today or later, and it's currently
-                    # during or after the update hour
-                    if valid_dt.date() >= now_nb.date():
+                    # Data is fresh only if VALIDDATE is for tomorrow or later.
+                    # This ensures we always poll again tomorrow at 11:05 AM
+                    # to confirm the next day's data has been published.
+                    if valid_dt.date() >= tomorrow_nb:
                         is_fresh = True
+                        _LOGGER.debug(
+                            "Data is complete (VALIDDATE: %s is tomorrow or later). "
+                            "Scheduling next poll for tomorrow at 11:05 AM.",
+                            valid_dt.isoformat(),
+                        )
 
             if is_fresh:
-                # We have today's data. Sleep until 11:05 AM tomorrow.
+                # We have tomorrow's data confirmed. Poll again tomorrow at 11:05 AM.
                 next_update = datetime.combine(
-                    now_nb.date() + timedelta(days=1),
+                    tomorrow_nb,
                     datetime.min.time().replace(
                         hour=UPDATE_HOUR_DATA, minute=UPDATE_MINUTE
                     ),
                     tzinfo=NB_TZ,
                 )
-                _LOGGER.debug(
-                    "Data is fresh (VALIDDATE: %s). "
-                    "Sleeping until tomorrow's update window.",
-                    valid_dt.isoformat(),
-                )
             else:
-                # Data is old.
+                # Data is stale or missing tomorrow's data
                 target_today_11 = datetime.combine(
                     now_nb.date(),
                     datetime.min.time().replace(
@@ -186,7 +194,8 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                     # We are in the "waiting for server" window
                     next_update = now_nb + timedelta(minutes=15)
                     _LOGGER.debug(
-                        "Data is stale. Retrying in 15 minutes to catch server update."
+                        "Data is stale or missing tomorrow's data. "
+                        "Retrying in 15 minutes to catch server update."
                     )
 
         _LOGGER.debug(
