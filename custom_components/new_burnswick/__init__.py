@@ -18,8 +18,6 @@ from .const import (
     API_URL,
     CONF_COUNTY,
     DOMAIN,
-    UPDATE_HOUR_DATA,
-    UPDATE_MINUTE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,66 +126,48 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     def _schedule_next_update(
         self, data: dict[str, dict[str, Any]] | None, retry: bool = False
     ) -> None:
-        """Calculate and schedule the next polling time."""
+        """Calculate and schedule the next polling time.
+
+        Strategy:
+        - If we have a VALIDDATE in the future, sleep until 5 minutes after it expires.
+        - If VALIDDATE is in the past (expired) or missing, poll every 15 minutes.
+        """
         if self._next_update_callback:
             self._next_update_callback()
             self._next_update_callback = None
 
         now_nb = datetime.now(tz=NB_TZ)
-        next_update: datetime
+        next_update: datetime | None = None
 
-        if retry:
-            # Basic retry if something went wrong
-            next_update = now_nb + timedelta(minutes=15)
-        else:
-            # Determine if the data we just got is "current"
-            # (from today's update window)
-            is_fresh = False
-            if data:
-                # All counties share the same VALIDDATE
-                first_county = next(iter(data.values()))
-                valid_date_ms = first_county.get("VALIDDATE")
-                if valid_date_ms:
-                    # VALIDDATE is 11:00 AM Atlantic (14:00 UTC)
-                    valid_dt = datetime.fromtimestamp(valid_date_ms / 1000.0, tz=NB_TZ)
-                    # Data is fresh if it is for today or later, and it's currently
-                    # during or after the update hour
-                    if valid_dt.date() >= now_nb.date():
-                        is_fresh = True
+        if not retry and data:
+            # All counties share the same VALIDDATE
+            first_county = next(iter(data.values()))
+            valid_date_ms = first_county.get("VALIDDATE")
+            if valid_date_ms:
+                # VALIDDATE is the expiration timestamp (usually 11:00 AM Atlantic)
+                valid_dt = datetime.fromtimestamp(valid_date_ms / 1000.0, tz=NB_TZ)
 
-            if is_fresh:
-                # We have today's data. Sleep until 11:05 AM tomorrow.
-                next_update = datetime.combine(
-                    now_nb.date() + timedelta(days=1),
-                    datetime.min.time().replace(
-                        hour=UPDATE_HOUR_DATA, minute=UPDATE_MINUTE
-                    ),
-                    tzinfo=NB_TZ,
-                )
-                _LOGGER.debug(
-                    "Data is fresh (VALIDDATE: %s). "
-                    "Sleeping until tomorrow's update window.",
-                    valid_dt.isoformat(),
-                )
-            else:
-                # Data is old.
-                target_today_11 = datetime.combine(
-                    now_nb.date(),
-                    datetime.min.time().replace(
-                        hour=UPDATE_HOUR_DATA, minute=UPDATE_MINUTE
-                    ),
-                    tzinfo=NB_TZ,
-                )
-
-                if now_nb < target_today_11:
-                    next_update = target_today_11
-                    _LOGGER.debug("Waiting for today's 11:05 AM update window.")
-                else:
-                    # We are in the "waiting for server" window
-                    next_update = now_nb + timedelta(minutes=15)
+                if valid_dt > now_nb:
+                    # Data is valid for some time in the future.
+                    # Schedule next check for 5 minutes after it expires.
+                    next_update = valid_dt + timedelta(minutes=5)
                     _LOGGER.debug(
-                        "Data is stale. Retrying in 15 minutes to catch server update."
+                        "Data is valid until %s. Scheduling next poll for %s.",
+                        valid_dt.isoformat(),
+                        next_update.isoformat(),
                     )
+
+        if not next_update:
+            # Data is expired, missing, or we're in a retry state.
+            next_update = now_nb + timedelta(minutes=15)
+            _LOGGER.debug(
+                "Data is stale or missing. Retrying in 15 minutes: %s",
+                next_update.isoformat(),
+            )
+
+        self._next_update_callback = async_track_point_in_time(
+            self.hass, self._handle_scheduled_update, next_update
+        )
 
         _LOGGER.debug(
             "Scheduling next API poll for: %s Atlantic", next_update.isoformat()
