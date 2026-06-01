@@ -88,8 +88,7 @@ def test_schedule_next_update_retry(mock_hass, mock_session):
         coordinator._schedule_next_update(None, retry=True)
         assert mock_track.called
         # Verify it scheduled for roughly 15 minutes from now
-        args, _ = mock_track.call_args
-        scheduled_time = args[2]
+        scheduled_time = mock_track.call_args[0][2]
         now = datetime.now(tz=NB_TZ)
         assert scheduled_time > now + timedelta(minutes=14)
         assert scheduled_time < now + timedelta(minutes=16)
@@ -142,8 +141,7 @@ def test_schedule_next_update_data_for_tomorrow_fresh(mock_hass, mock_session):
         assert mock_track.called
 
         # Verify it scheduled for tomorrow at 11:05 AM
-        args, _ = mock_track.call_args
-        scheduled_time = args[2]
+        scheduled_time = mock_track.call_args[0][2]
 
         expected_time = datetime.combine(
             tomorrow_nb.date(),
@@ -154,9 +152,7 @@ def test_schedule_next_update_data_for_tomorrow_fresh(mock_hass, mock_session):
         assert scheduled_time == expected_time
 
 
-def test_schedule_next_update_data_for_today_not_fresh(
-    mock_hass, mock_session
-):
+def test_schedule_next_update_data_for_today_not_fresh(mock_hass, mock_session):
     """Test that data is NOT fresh when VALIDDATE is today.
 
     With the new logic, if VALIDDATE is only for today (not tomorrow+),
@@ -190,8 +186,7 @@ def test_schedule_next_update_data_for_today_not_fresh(
         assert mock_track.called
 
         # Verify it scheduled for roughly 15 minutes from now (retry logic)
-        args, _ = mock_track.call_args
-        scheduled_time = args[2]
+        scheduled_time = mock_track.call_args[0][2]
         now = datetime.now(tz=NB_TZ)
 
         # Should be approximately 15 minutes from now
@@ -234,8 +229,7 @@ def test_schedule_next_update_data_for_day_after_tomorrow_fresh(
         assert mock_track.called
 
         # Verify it scheduled for tomorrow at 11:05 AM (not later)
-        args, _ = mock_track.call_args
-        scheduled_time = args[2]
+        scheduled_time = mock_track.call_args[0][2]
 
         tomorrow_nb = now_nb + timedelta(days=1)
         expected_time = datetime.combine(
@@ -259,8 +253,7 @@ def test_schedule_next_update_no_data(mock_hass, mock_session):
 
         # Should schedule for 11:05 AM today if we haven't reached it yet,
         # or 15 minutes from now if we have passed 11:05 AM
-        args, _ = mock_track.call_args
-        scheduled_time = args[2]
+        scheduled_time = mock_track.call_args[0][2]
         now = datetime.now(tz=NB_TZ)
 
         target_today_11 = datetime.combine(
