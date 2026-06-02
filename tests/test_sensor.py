@@ -25,8 +25,8 @@ def test_next_update_sensor_properties():
                 "name": f"{county.title()} County Burn Status",
             }
         return {
-            "identifiers": {("new_burnswick", f"{entry_id}_map")},
-            "name": "New Brunswick Burn Ban Map",
+            "identifiers": {("new_burnswick", f"{entry_id}_common")},
+            "name": "New Brunswick Burn Ban Data",
         }
 
     coordinator.get_device_info.side_effect = mock_get_device_info
@@ -41,8 +41,8 @@ def test_next_update_sensor_properties():
     assert sensor.native_value == next_update
     assert sensor.translation_key == "next_update"
     assert sensor.has_entity_name is True
-    assert sensor.device_info["identifiers"] == {("new_burnswick", "test_entry_map")}
-    assert sensor.device_info["name"] == "New Brunswick Burn Ban Map"
+    assert sensor.device_info["identifiers"] == {("new_burnswick", "test_entry_common")}
+    assert sensor.device_info["name"] == "New Brunswick Burn Ban Data"
 
 
 def test_next_update_sensor_none():

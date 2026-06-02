@@ -34,6 +34,10 @@ async def test_async_cleanup_registries(mock_hass, mock_entry):
     mock_entity_button.entity_id = "button.nb_refresh"
     mock_entity_button.unique_id = "test_entry_id_refresh_button"
 
+    mock_entity_next_update = MagicMock()
+    mock_entity_next_update.entity_id = "sensor.nb_next_update"
+    mock_entity_next_update.unique_id = "test_entry_id_next_update"
+
     mock_entity_york_status = MagicMock()
     mock_entity_york_status.entity_id = "sensor.nb_york_status"
     mock_entity_york_status.unique_id = "test_entry_id_york_status"
@@ -53,6 +57,7 @@ async def test_async_cleanup_registries(mock_hass, mock_entry):
     entity_entries = [
         mock_entity_map,
         mock_entity_button,
+        mock_entity_next_update,
         mock_entity_york_status,
         mock_entity_york_fire,
         mock_entity_kent_status,
@@ -60,9 +65,9 @@ async def test_async_cleanup_registries(mock_hass, mock_entry):
     ]
 
     # Mock devices
-    mock_device_map = MagicMock()
-    mock_device_map.id = "dev_map_id"
-    mock_device_map.identifiers = {(DOMAIN, "test_entry_id_map")}
+    mock_device_common = MagicMock()
+    mock_device_common.id = "dev_common_id"
+    mock_device_common.identifiers = {(DOMAIN, "test_entry_id_common")}
 
     mock_device_york = MagicMock()
     mock_device_york.id = "dev_york_id"
@@ -73,7 +78,7 @@ async def test_async_cleanup_registries(mock_hass, mock_entry):
     mock_device_kent.identifiers = {(DOMAIN, "test_entry_id_kent")}
 
     device_entries = [
-        mock_device_map,
+        mock_device_common,
         mock_device_york,
         mock_device_kent,
     ]

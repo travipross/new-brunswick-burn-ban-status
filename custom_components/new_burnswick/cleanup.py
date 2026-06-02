@@ -22,6 +22,7 @@ async def async_cleanup_registries(
     expected_entity_ids = {
         f"{entry.entry_id}_burn_ban_map",
         f"{entry.entry_id}_refresh_button",
+        f"{entry.entry_id}_next_update",
     }
     for county in current_counties:
         county_lower = county.lower()
@@ -41,7 +42,7 @@ async def async_cleanup_registries(
             ent_reg.async_remove(entity_entry.entity_id)
 
     # 2. CLEANUP ORPHANED DEVICES
-    expected_device_ids = {f"{entry.entry_id}_map"}
+    expected_device_ids = {f"{entry.entry_id}_common"}
     for county in current_counties:
         expected_device_ids.add(f"{entry.entry_id}_{county.lower()}")
 
