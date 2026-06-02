@@ -34,6 +34,9 @@
           "limited": "Burning allowed between 8pm and 8am",
           "allowed": "Burning allowed"
         }
+      },
+      "next_update": {
+        "name": "Next update"
       }
     }
   }

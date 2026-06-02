@@ -10,6 +10,7 @@ A [Home Assistant](https://www.home-assistant.io/) custom integration that track
   - 🟡 **Yellow** (limited) → `on` between 8 PM and 8 AM Atlantic Time only
   - 🔴 **Red** (none) → always `off`
 - **Burn ban map image entity** — displays the [provincial burn category map](https://www3.gnb.ca/public/fire-feu/maps/cat1.png).
+- **Next update diagnostic sensor** — shows exactly when the next scheduled API poll will occur.
 - **Multi-county selection** — pick one, several, or all counties during setup. Counties can be changed at any time via the integration's options flow.
 
 ## How it works — Technical Logic
@@ -17,10 +18,9 @@ A [Home Assistant](https://www.home-assistant.io/) custom integration that track
 To minimize impact on the provincial GIS servers while maintaining 100% accuracy, this integration uses a "Split-Clock" logic:
 
 ### 1. Intelligent Polling (The Coordinator)
-The integration does **not** poll every few minutes. Instead, it targets the provincial update window:
-- **Daily Update:** The provincial GIS database typically generates new records at **11:00 AM Atlantic Time**.
-- **The Polling Window:** The integration starts checking for updates at 11:05 AM. If the server is late, it retries every 15 minutes.
-- **Data Freshness:** Once "today's" record is successfully retrieved, the integration **stops all API calls** until 11:05 AM the following day.
+The integration does **not** poll every few minutes. Instead, it uses the API's `VALIDDATE` timestamp (which marks when the current status expires) as its authoritative source of truth:
+- **Scheduled Sleep:** If the retrieved data is valid until a future time (typically 11:00 AM the following day), the integration sleeps until **5 minutes after that expiration** to allow the GIS server time to update its records.
+- **Stale Data Retries:** If the server is late or the retrieved data is already expired, the integration enters a **15-minute retry loop** until the next day's update is successfully received.
 - **Manual Refresh:** You can still force an immediate update at any time using the **Refresh Data** button.
 
 ### 2. State Transitions (The Entities)
@@ -64,6 +64,8 @@ Plus one shared entity:
 | Entity | Type | Description |
 |--------|------|-------------|
 | `image.new_brunswick_burn_ban_map` | Image | Provincial burn category map |
+| `sensor.new_brunswick_burn_ban_next_update` | Sensor | Next scheduled API poll time |
+| `button.new_brunswick_burn_ban_refresh_data` | Button | Manually trigger API refresh |
 
 ## Usage Example — RGB LED status indicator
 

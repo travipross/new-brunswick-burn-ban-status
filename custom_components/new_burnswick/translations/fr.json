@@ -34,6 +34,9 @@
           "limited": "Feux permis entre 20 h et 8 h",
           "allowed": "Feux permis"
         }
+      },
+      "next_update": {
+        "name": "Prochaine mise à jour"
       }
     }
   }
