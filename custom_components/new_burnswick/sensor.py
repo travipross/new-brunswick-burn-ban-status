@@ -63,10 +63,10 @@ class NewBurnswickNextUpdateSensor(
         self._attr_unique_id = f"{entry.entry_id}_next_update"
 
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": "New Brunswick Burn Ban Status",
+            "identifiers": {(DOMAIN, f"{entry.entry_id}_map")},
+            "name": "New Brunswick Burn Ban Map",
             "manufacturer": "Government of New Brunswick",
-            "model": "Burn Ban Status",
+            "model": "Burn Ban Map",
             "entry_type": "service",
         }
 

@@ -29,6 +29,8 @@ def test_next_update_sensor_properties():
     assert sensor.native_value == next_update
     assert sensor.translation_key == "next_update"
     assert sensor.has_entity_name is True
+    assert sensor.device_info["identifiers"] == {("new_burnswick", "test_entry_map")}
+    assert sensor.device_info["name"] == "New Brunswick Burn Ban Map"
 
 
 def test_next_update_sensor_none():
