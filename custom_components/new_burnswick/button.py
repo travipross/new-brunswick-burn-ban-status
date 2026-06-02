@@ -50,13 +50,7 @@ class NewBurnswickRefreshButton(
         self._attr_unique_id = f"{entry.entry_id}_refresh_button"
 
         # Associate the button with the provincial service device
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, f"{entry.entry_id}_map")},
-            "name": "New Brunswick Burn Ban Map",
-            "manufacturer": "Government of New Brunswick",
-            "model": "Burn Ban Map",
-            "entry_type": "service",
-        }
+        self._attr_device_info = self.coordinator.get_device_info(entry.entry_id)
 
     async def async_press(self) -> None:
         """Handle the button press."""

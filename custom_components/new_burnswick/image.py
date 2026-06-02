@@ -55,13 +55,7 @@ class NewBurnswickMapImageEntity(
         self._attr_name = None
 
         # Associate the image with a provincial service device
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, f"{entry.entry_id}_map")},
-            "name": "New Brunswick Burn Ban Map",
-            "manufacturer": "Government of New Brunswick",
-            "model": "Burn Ban Map",
-            "entry_type": "service",
-        }
+        self._attr_device_info = self.coordinator.get_device_info(entry.entry_id)
 
     @callback
     def _handle_coordinator_update(self) -> None:

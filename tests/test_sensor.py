@@ -18,6 +18,18 @@ def test_next_update_sensor_properties():
     entry = MagicMock()
     entry.entry_id = "test_entry"
 
+    def mock_get_device_info(entry_id, county=None):
+        if county:
+            return {
+                "identifiers": {("new_burnswick", f"{entry_id}_{county.lower()}")},
+                "name": f"{county.title()} County Burn Status",
+            }
+        return {
+            "identifiers": {("new_burnswick", f"{entry_id}_map")},
+            "name": "New Brunswick Burn Ban Map",
+        }
+
+    coordinator.get_device_info.side_effect = mock_get_device_info
     next_update = datetime(2026, 6, 2, 11, 5, 0, tzinfo=NB_TZ)
     coordinator.next_update_at = next_update
 

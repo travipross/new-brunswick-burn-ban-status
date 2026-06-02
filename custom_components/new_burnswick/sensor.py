@@ -62,13 +62,8 @@ class NewBurnswickNextUpdateSensor(
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_next_update"
 
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, f"{entry.entry_id}_map")},
-            "name": "New Brunswick Burn Ban Map",
-            "manufacturer": "Government of New Brunswick",
-            "model": "Burn Ban Map",
-            "entry_type": "service",
-        }
+        # Associate the sensor with the provincial service device
+        self._attr_device_info = self.coordinator.get_device_info(entry.entry_id)
 
     @property
     def native_value(self) -> datetime | None:
@@ -102,13 +97,9 @@ class NewBurnswickSensor(
         self._attr_name = None
 
         # Device info to group entities by county
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, f"{entry.entry_id}_{self.county.lower()}")},
-            "name": f"{self.county.title()} County Burn Status",
-            "manufacturer": "Government of New Brunswick",
-            "model": "Burn Ban Status",
-            "entry_type": "service",
-        }
+        self._attr_device_info = self.coordinator.get_device_info(
+            entry.entry_id, self.county
+        )
 
     @property
     def _county_data(self) -> dict[str, Any] | None:

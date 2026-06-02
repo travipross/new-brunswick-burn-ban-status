@@ -13,6 +13,13 @@ def mock_coordinator():
     """Mock coordinator."""
     coordinator = MagicMock()
     coordinator.last_update_success_time = None
+
+    def mock_get_device_info(entry_id, county=None):
+        if county:
+            return {"name": f"{county.title()} County Burn Status"}
+        return {"name": "New Brunswick Burn Ban Map"}
+
+    coordinator.get_device_info.side_effect = mock_get_device_info
     return coordinator
 
 

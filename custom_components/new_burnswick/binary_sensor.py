@@ -118,13 +118,9 @@ class NewBurnswickFireAllowedSensor(
         self._attr_name = "Fire Currently Allowed"
 
         # Share device with the status sensor for the same county
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, f"{entry.entry_id}_{self.county.lower()}")},
-            "name": f"{self.county.title()} County Burn Status",
-            "manufacturer": "Government of New Brunswick",
-            "model": "Burn Ban Status",
-            "entry_type": "service",
-        }
+        self._attr_device_info = self.coordinator.get_device_info(
+            entry.entry_id, self.county
+        )
 
     async def async_added_to_hass(self) -> None:
         """Schedule the first state transition on load."""

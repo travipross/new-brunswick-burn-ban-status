@@ -9,6 +9,7 @@ import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utcnow
@@ -178,3 +179,22 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     async def _handle_scheduled_update(self, _now: datetime) -> None:
         """Trigger the coordinator refresh."""
         await self.async_refresh()
+
+    def get_device_info(self, entry_id: str, county: str | None = None) -> DeviceInfo:
+        """Return device info for a county or the shared map service."""
+        if county:
+            return DeviceInfo(
+                identifiers={(DOMAIN, f"{entry_id}_{county.lower()}")},
+                name=f"{county.title()} County Burn Ban Data",
+                manufacturer="Government of New Brunswick",
+                model="Burn Ban - County Data",
+                entry_type="service",
+            )
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{entry_id}_common")},
+            name="New Brunswick Burn Ban Data",
+            manufacturer="Government of New Brunswick",
+            model="Burn Ban - Province Data",
+            entry_type="service",
+        )
