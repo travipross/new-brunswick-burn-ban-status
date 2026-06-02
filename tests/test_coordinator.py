@@ -173,3 +173,50 @@ def test_schedule_next_update_future_validdate(mock_hass, mock_session):
             # Since valid_dt (11:00) > now (10:00), it should schedule for 11:05 AM
             expected_next = valid_date + timedelta(minutes=5)
             assert scheduled_time == expected_next
+
+
+def test_schedule_next_update_retry_param(mock_hass, mock_session):
+    """Test that setting retry=True schedules a 15-min poll."""
+    coordinator = NewBurnswickCoordinator(mock_hass, mock_session)
+    mock_now = datetime(2026, 6, 2, 10, 0, 0, tzinfo=NB_TZ)
+
+    with patch("custom_components.new_burnswick.datetime") as mock_datetime:
+        mock_datetime.now.return_value = mock_now
+        with patch(
+            "custom_components.new_burnswick.async_track_point_in_time"
+        ) as mock_track:
+            coordinator._schedule_next_update(None, retry=True)
+            args, _ = mock_track.call_args
+            assert args[2] == mock_now + timedelta(minutes=15)
+            assert coordinator.next_update_at == args[2]
+
+
+def test_schedule_next_update_missing_data(mock_hass, mock_session):
+    """Test that missing data schedules a 15-min retry."""
+    coordinator = NewBurnswickCoordinator(mock_hass, mock_session)
+    mock_now = datetime(2026, 6, 2, 10, 0, 0, tzinfo=NB_TZ)
+
+    with patch("custom_components.new_burnswick.datetime") as mock_datetime:
+        mock_datetime.now.return_value = mock_now
+        with patch(
+            "custom_components.new_burnswick.async_track_point_in_time"
+        ) as mock_track:
+            coordinator._schedule_next_update(None)
+            args, _ = mock_track.call_args
+            assert args[2] == mock_now + timedelta(minutes=15)
+
+
+def test_schedule_next_update_missing_validdate(mock_hass, mock_session):
+    """Test that missing VALIDDATE schedules a 15-min retry."""
+    coordinator = NewBurnswickCoordinator(mock_hass, mock_session)
+    mock_now = datetime(2026, 6, 2, 10, 0, 0, tzinfo=NB_TZ)
+    data = {"YORK": {"PUBLICCATEGORY": 3}}  # Missing VALIDDATE
+
+    with patch("custom_components.new_burnswick.datetime") as mock_datetime:
+        mock_datetime.now.return_value = mock_now
+        with patch(
+            "custom_components.new_burnswick.async_track_point_in_time"
+        ) as mock_track:
+            coordinator._schedule_next_update(data)
+            args, _ = mock_track.call_args
+            assert args[2] == mock_now + timedelta(minutes=15)

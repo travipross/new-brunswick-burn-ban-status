@@ -29,3 +29,13 @@ def test_next_update_sensor_properties():
     assert sensor.native_value == next_update
     assert sensor.translation_key == "next_update"
     assert sensor.has_entity_name is True
+
+
+def test_next_update_sensor_none():
+    """Test the properties of the next update sensor when next_update_at is None."""
+    coordinator = MagicMock()
+    entry = MagicMock()
+    coordinator.next_update_at = None
+
+    sensor = NewBurnswickNextUpdateSensor(coordinator, entry)
+    assert sensor.native_value is None

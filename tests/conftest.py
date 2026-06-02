@@ -39,23 +39,17 @@ class MockBase:
 class MockEntity(MockBase):
     """Mock Entity base class."""
 
+    _attr_unique_id = None
+    _attr_name = None
+    _attr_device_info = None
+    _attr_device_class = None
+    _attr_entity_category = None
+    _attr_translation_key = None
+    _attr_has_entity_name = False
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.hass = None
-        if not hasattr(self, "_attr_unique_id"):
-            self._attr_unique_id = None
-        if not hasattr(self, "_attr_name"):
-            self._attr_name = None
-        if not hasattr(self, "_attr_device_info"):
-            self._attr_device_info = None
-        if not hasattr(self, "_attr_device_class"):
-            self._attr_device_class = None
-        if not hasattr(self, "_attr_entity_category"):
-            self._attr_entity_category = None
-        if not hasattr(self, "_attr_translation_key"):
-            self._attr_translation_key = None
-        if not hasattr(self, "_attr_has_entity_name"):
-            self._attr_has_entity_name = False
 
     @property
     def unique_id(self):

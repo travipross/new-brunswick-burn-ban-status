@@ -166,11 +166,11 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 next_update.isoformat(),
             )
 
-        _LOGGER.debug(
-            "Scheduling next API poll for: %s Atlantic", next_update.isoformat()
-        )
-
         self.next_update_at = next_update
+        _LOGGER.debug(
+            "Next API poll scheduled for: %s Atlantic (tracked in next_update_at)",
+            self.next_update_at.isoformat(),
+        )
         self._next_update_callback = async_track_point_in_time(
             self.hass, self._handle_scheduled_update, next_update
         )
