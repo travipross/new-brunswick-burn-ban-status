@@ -97,8 +97,7 @@ class NewBurnswickSensor(
             f"{entry.entry_id}_{self.county.lower()}_{UID_SUFFIX_CATEGORY}"
         )
 
-        # Setting name to None ensures it takes the device name as the entity name
-        self._attr_name = None
+        self._attr_name = "Burn Ban Category"
 
         # Device info to group entities by county
         self._attr_device_info = self.coordinator.get_device_info(
