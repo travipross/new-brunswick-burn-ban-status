@@ -9,6 +9,7 @@ A [Home Assistant](https://www.home-assistant.io/) custom integration that track
   - 🟢 **Green** (allowed) → always `on`
   - 🟡 **Yellow** (limited) → `on` between 8 PM and 8 AM Atlantic Time only
   - 🔴 **Red** (none) → always `off`
+- **Raw API Attributes** — every county sensor and binary sensor includes an `api_attributes` attribute containing the raw JSON data for that specific county from the GIS server.
 - **Burn ban map image entity** — displays the [provincial burn category map](https://www3.gnb.ca/public/fire-feu/maps/cat1.png).
 - **Next update diagnostic sensor** — shows exactly when the next scheduled API poll will occur.
 - **Multi-county selection** — pick one, several, or all counties during setup. Counties can be changed at any time via the integration's options flow.
@@ -16,6 +17,31 @@ A [Home Assistant](https://www.home-assistant.io/) custom integration that track
 ## How it works — Technical Logic
 
 To minimize impact on the provincial GIS servers while maintaining 100% accuracy, this integration uses a "Split-Clock" logic:
+
+```mermaid
+flowchart TD
+    Trigger([Update Triggered]) --> Fetch[Fetch Data from GIS API]
+    Fetch --> Response{Response 200?}
+    
+    Response -- No --> Error[Schedule Retry: 15 min]
+    Response -- Yes --> Parse[Parse JSON & Map Features]
+    
+    Parse --> DataValid{Counties Found?}
+    DataValid -- No --> Error
+    DataValid -- Yes --> Update[Update Sensors & Last Success Time]
+    
+    Update --> Calc[Calculate Next Poll Time]
+    Calc --> Future{VALIDDATE in future?}
+    
+    Future -- Yes --> Normal[Next Poll: VALIDDATE + 5 min]
+    Future -- No --> Stale[Next Poll: Now + 15 min]
+    
+    Error --> Wait([Wait for Next Update])
+    Normal --> Wait
+    Stale --> Wait
+    
+    Wait -- Timer / Manual Refresh --> Trigger
+```
 
 ### 1. Intelligent Polling (The Coordinator)
 The integration does **not** poll every few minutes. Instead, it uses the API's `VALIDDATE` timestamp (which marks when the current status expires) as its authoritative source of truth:

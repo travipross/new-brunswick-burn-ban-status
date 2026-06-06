@@ -7,7 +7,10 @@ from zoneinfo import ZoneInfo
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import EntityCategory
 
-from custom_components.new_burnswick.sensor import NewBurnswickNextUpdateSensor
+from custom_components.new_burnswick.sensor import (
+    NewBurnswickNextUpdateSensor,
+    NewBurnswickSensor,
+)
 
 NB_TZ = ZoneInfo("America/Moncton")
 
@@ -53,3 +56,28 @@ def test_next_update_sensor_none():
 
     sensor = NewBurnswickNextUpdateSensor(coordinator, entry)
     assert sensor.native_value is None
+
+
+def test_burn_ban_sensor_properties():
+    """Test the properties of the burn ban status sensor."""
+    coordinator = MagicMock()
+    entry = MagicMock()
+    entry.entry_id = "test_entry"
+    county = "YORK"
+
+    coordinator.data = {
+        "YORK": {
+            "NAME": "YORK",
+            "VALIDDATE": 1705312800000,
+            "PUBLICCATEGORY": 3,
+            "OTHER": "DATA",
+        }
+    }
+
+    sensor = NewBurnswickSensor(coordinator, entry, county)
+
+    assert sensor.unique_id == "test_entry_york_status"
+    assert sensor.state == "allowed"  # Category 3
+    assert sensor.extra_state_attributes["county"] == "York"
+    assert sensor.extra_state_attributes["api_attributes"] == coordinator.data["YORK"]
+    assert sensor.extra_state_attributes["raw_category"] == 3

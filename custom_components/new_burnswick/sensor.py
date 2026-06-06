@@ -159,5 +159,5 @@ class NewBurnswickSensor(
             "status_rgb": RGB_MAPPING.get(category, [128, 128, 128]),
             "api_valid_until": api_valid_until,
             "raw_category": category,
-            "api_payload": data,
+            "api_attributes": data,
         }

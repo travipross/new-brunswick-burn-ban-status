@@ -213,4 +213,5 @@ class NewBurnswickFireAllowedSensor(
                 "(yellow status only)"
             ),
             "evaluated_timezone": "America/Moncton",
+            "api_attributes": data,
         }

@@ -39,6 +39,7 @@ class MockBase:
 class MockEntity(MockBase):
     """Mock Entity base class."""
 
+    entity_id = None
     _attr_unique_id = None
     _attr_name = None
     _attr_device_info = None
@@ -109,6 +110,10 @@ class MockSensorEntity(MockEntity):
     """Mock SensorEntity."""
 
 
+class MockBinarySensorEntity(MockEntity):
+    """Mock BinarySensorEntity."""
+
+
 class MockCoordinator(MockBase):
     """Mock DataUpdateCoordinator."""
 
@@ -172,6 +177,9 @@ sys.modules[
 sys.modules["homeassistant.components.image"].ImageEntity = MockImageEntity
 sys.modules["homeassistant.components.button"].ButtonEntity = MockButtonEntity
 sys.modules["homeassistant.components.sensor"].SensorEntity = MockSensorEntity
+sys.modules[
+    "homeassistant.components.binary_sensor"
+].BinarySensorEntity = MockBinarySensorEntity
 sys.modules["homeassistant.config_entries"].ConfigFlow = MockConfigFlow
 sys.modules["homeassistant.config_entries"].OptionsFlow = MockOptionsFlow
 sys.modules["homeassistant.config_entries"].ConfigEntry = MagicMock
