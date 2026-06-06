@@ -65,3 +65,13 @@ RGB_MAPPING = {
     2: [255, 255, 0],  # Yellow
     3: [0, 255, 0],  # Green
 }
+
+# Unique ID suffixes
+UID_SUFFIX_CATEGORY = "burn_ban_category"
+UID_SUFFIX_BURNING_ALLOWED = "burning_currently_allowed"
+UID_SUFFIX_MAP = "burn_ban_map"
+UID_SUFFIX_REFRESH = "refresh_burn_ban_data"
+UID_SUFFIX_NEXT_UPDATE = "next_burn_ban_data_update"
+
+# Device ID suffixes
+DID_SUFFIX_COMMON = "common"

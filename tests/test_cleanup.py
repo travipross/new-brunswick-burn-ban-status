@@ -1,22 +1,30 @@
-"""Tests for the registry cleanup utility."""
+"""Tests for New Brunswick Burn Ban Status registry cleanup."""
 
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from custom_components.new_burnswick.cleanup import async_cleanup_registries
-from custom_components.new_burnswick.const import DOMAIN
+from custom_components.new_burnswick.const import (
+    DID_SUFFIX_COMMON,
+    DOMAIN,
+    UID_SUFFIX_BURNING_ALLOWED,
+    UID_SUFFIX_CATEGORY,
+    UID_SUFFIX_MAP,
+    UID_SUFFIX_NEXT_UPDATE,
+    UID_SUFFIX_REFRESH,
+)
 
 
 @pytest.fixture
 def mock_hass():
-    """Mock HomeAssistant."""
+    """Mock Home Assistant."""
     return MagicMock()
 
 
 @pytest.fixture
 def mock_entry():
-    """Mock ConfigEntry."""
+    """Mock Config Entry."""
     entry = MagicMock()
     entry.entry_id = "test_entry_id"
     return entry
@@ -28,31 +36,31 @@ async def test_async_cleanup_registries(mock_hass, mock_entry):
     # Mock entities
     mock_entity_map = MagicMock()
     mock_entity_map.entity_id = "image.nb_map"
-    mock_entity_map.unique_id = "test_entry_id_burn_ban_map"
+    mock_entity_map.unique_id = f"test_entry_id_{UID_SUFFIX_MAP}"
 
     mock_entity_button = MagicMock()
     mock_entity_button.entity_id = "button.nb_refresh"
-    mock_entity_button.unique_id = "test_entry_id_refresh_button"
+    mock_entity_button.unique_id = f"test_entry_id_{UID_SUFFIX_REFRESH}"
 
     mock_entity_next_update = MagicMock()
     mock_entity_next_update.entity_id = "sensor.nb_next_update"
-    mock_entity_next_update.unique_id = "test_entry_id_next_update"
+    mock_entity_next_update.unique_id = f"test_entry_id_{UID_SUFFIX_NEXT_UPDATE}"
 
     mock_entity_york_status = MagicMock()
     mock_entity_york_status.entity_id = "sensor.nb_york_status"
-    mock_entity_york_status.unique_id = "test_entry_id_york_status"
+    mock_entity_york_status.unique_id = f"test_entry_id_york_{UID_SUFFIX_CATEGORY}"
 
     mock_entity_york_fire = MagicMock()
     mock_entity_york_fire.entity_id = "binary_sensor.nb_york_fire"
-    mock_entity_york_fire.unique_id = "test_entry_id_york_fire_allowed"
+    mock_entity_york_fire.unique_id = f"test_entry_id_york_{UID_SUFFIX_BURNING_ALLOWED}"
 
     mock_entity_kent_status = MagicMock()
     mock_entity_kent_status.entity_id = "sensor.nb_kent_status"
-    mock_entity_kent_status.unique_id = "test_entry_id_kent_status"
+    mock_entity_kent_status.unique_id = "test_entry_id_kent_old_status"
 
     mock_entity_kent_fire = MagicMock()
     mock_entity_kent_fire.entity_id = "binary_sensor.nb_kent_fire"
-    mock_entity_kent_fire.unique_id = "test_entry_id_kent_fire_allowed"
+    mock_entity_kent_fire.unique_id = "test_entry_id_kent_old_fire_allowed"
 
     entity_entries = [
         mock_entity_map,
@@ -67,7 +75,7 @@ async def test_async_cleanup_registries(mock_hass, mock_entry):
     # Mock devices
     mock_device_common = MagicMock()
     mock_device_common.id = "dev_common_id"
-    mock_device_common.identifiers = {(DOMAIN, "test_entry_id_common")}
+    mock_device_common.identifiers = {(DOMAIN, f"test_entry_id_{DID_SUFFIX_COMMON}")}
 
     mock_device_york = MagicMock()
     mock_device_york.id = "dev_york_id"
@@ -75,7 +83,7 @@ async def test_async_cleanup_registries(mock_hass, mock_entry):
 
     mock_device_kent = MagicMock()
     mock_device_kent.id = "dev_kent_id"
-    mock_device_kent.identifiers = {(DOMAIN, "test_entry_id_kent")}
+    mock_device_kent.identifiers = {(DOMAIN, "test_entry_id_kent_stale")}
 
     device_entries = [
         mock_device_common,

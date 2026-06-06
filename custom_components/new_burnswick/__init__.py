@@ -18,6 +18,7 @@ from .cleanup import async_cleanup_registries
 from .const import (
     API_URL,
     CONF_COUNTY,
+    DID_SUFFIX_COMMON,
     DOMAIN,
 )
 
@@ -192,7 +193,7 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             )
 
         return DeviceInfo(
-            identifiers={(DOMAIN, f"{entry_id}_common")},
+            identifiers={(DOMAIN, f"{entry_id}_{DID_SUFFIX_COMMON}")},
             name="New Brunswick",
             manufacturer="Government of New Brunswick",
             model="Burn Ban - Province Data",

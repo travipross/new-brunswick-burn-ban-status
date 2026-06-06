@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, MAP_URL
+from .const import DOMAIN, MAP_URL, UID_SUFFIX_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class NewBurnswickMapImageEntity(
         self.entry = entry
 
         # Unique ID for the image entity
-        self._attr_unique_id = f"{entry.entry_id}_burn_ban_map"
+        self._attr_unique_id = f"{entry.entry_id}_{UID_SUFFIX_MAP}"
 
         # Explicit name to complement the simplified device name
         self._attr_name = "Burn Ban Map"

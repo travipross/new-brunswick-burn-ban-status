@@ -15,7 +15,11 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_COUNTY, DOMAIN
+from .const import (
+    CONF_COUNTY,
+    DOMAIN,
+    UID_SUFFIX_BURNING_ALLOWED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,7 +119,7 @@ class NewBurnswickFireAllowedSensor(
         self.county = county.upper()
 
         self._attr_unique_id = (
-            f"{entry.entry_id}_{self.county.lower()}_burning_currently_allowed"
+            f"{entry.entry_id}_{self.county.lower()}_{UID_SUFFIX_BURNING_ALLOWED}"
         )
         self._attr_name = "Burning Currently Allowed"
 

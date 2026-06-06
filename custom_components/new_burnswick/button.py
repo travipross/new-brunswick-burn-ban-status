@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, UID_SUFFIX_REFRESH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class NewBurnswickRefreshButton(
         self.entry = entry
 
         # Unique ID for the button
-        self._attr_unique_id = f"{entry.entry_id}_refresh_burn_ban_data"
+        self._attr_unique_id = f"{entry.entry_id}_{UID_SUFFIX_REFRESH}"
 
         # Associate the button with the provincial service device
         self._attr_device_info = self.coordinator.get_device_info(entry.entry_id)

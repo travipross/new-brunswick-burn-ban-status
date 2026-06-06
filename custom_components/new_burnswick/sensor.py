@@ -22,6 +22,8 @@ from .const import (
     RGB_MAPPING,
     STATUS_MAPPING,
     TEXT_MAPPING,
+    UID_SUFFIX_CATEGORY,
+    UID_SUFFIX_NEXT_UPDATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,7 +62,7 @@ class NewBurnswickNextUpdateSensor(
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_next_burn_ban_data_update"
+        self._attr_unique_id = f"{entry.entry_id}_{UID_SUFFIX_NEXT_UPDATE}"
 
         # Associate the sensor with the provincial service device
         self._attr_device_info = self.coordinator.get_device_info(entry.entry_id)
@@ -92,7 +94,7 @@ class NewBurnswickSensor(
 
         # Unique ID for the sensor
         self._attr_unique_id = (
-            f"{entry.entry_id}_{self.county.lower()}_burn_ban_category"
+            f"{entry.entry_id}_{self.county.lower()}_{UID_SUFFIX_CATEGORY}"
         )
 
         # Setting name to None ensures it takes the device name as the entity name

@@ -6,7 +6,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN
+from .const import (
+    DID_SUFFIX_COMMON,
+    DOMAIN,
+    UID_SUFFIX_BURNING_ALLOWED,
+    UID_SUFFIX_CATEGORY,
+    UID_SUFFIX_MAP,
+    UID_SUFFIX_NEXT_UPDATE,
+    UID_SUFFIX_REFRESH,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,14 +28,18 @@ async def async_cleanup_registries(
     # 1. CLEANUP ORPHANED ENTITIES
     # Derive the set of expected unique_ids for this entry
     expected_entity_ids = {
-        f"{entry.entry_id}_burn_ban_map",
-        f"{entry.entry_id}_refresh_button",
-        f"{entry.entry_id}_next_update",
+        f"{entry.entry_id}_{UID_SUFFIX_MAP}",
+        f"{entry.entry_id}_{UID_SUFFIX_REFRESH}",
+        f"{entry.entry_id}_{UID_SUFFIX_NEXT_UPDATE}",
     }
     for county in current_counties:
         county_lower = county.lower()
-        expected_entity_ids.add(f"{entry.entry_id}_{county_lower}_status")
-        expected_entity_ids.add(f"{entry.entry_id}_{county_lower}_fire_allowed")
+        expected_entity_ids.add(
+            f"{entry.entry_id}_{county_lower}_{UID_SUFFIX_CATEGORY}"
+        )
+        expected_entity_ids.add(
+            f"{entry.entry_id}_{county_lower}_{UID_SUFFIX_BURNING_ALLOWED}"
+        )
 
     ent_reg = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
@@ -42,7 +54,7 @@ async def async_cleanup_registries(
             ent_reg.async_remove(entity_entry.entity_id)
 
     # 2. CLEANUP ORPHANED DEVICES
-    expected_device_ids = {f"{entry.entry_id}_common"}
+    expected_device_ids = {f"{entry.entry_id}_{DID_SUFFIX_COMMON}"}
     for county in current_counties:
         expected_device_ids.add(f"{entry.entry_id}_{county.lower()}")
 
