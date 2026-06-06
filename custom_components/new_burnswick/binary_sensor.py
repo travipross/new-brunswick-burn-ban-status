@@ -114,8 +114,10 @@ class NewBurnswickFireAllowedSensor(
         self.entry = entry
         self.county = county.upper()
 
-        self._attr_unique_id = f"{entry.entry_id}_{self.county.lower()}_fire_allowed"
-        self._attr_name = "Fire Currently Allowed"
+        self._attr_unique_id = (
+            f"{entry.entry_id}_{self.county.lower()}_burning_currently_allowed"
+        )
+        self._attr_name = "Burning Currently Allowed"
 
         # Share device with the status sensor for the same county
         self._attr_device_info = self.coordinator.get_device_info(

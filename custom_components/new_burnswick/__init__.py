@@ -185,7 +185,7 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         if county:
             return DeviceInfo(
                 identifiers={(DOMAIN, f"{entry_id}_{county.lower()}")},
-                name=f"{county.title()} County Burn Ban Data",
+                name=f"{county.title()} County",
                 manufacturer="Government of New Brunswick",
                 model="Burn Ban - County Data",
                 entry_type="service",
@@ -193,7 +193,7 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
 
         return DeviceInfo(
             identifiers={(DOMAIN, f"{entry_id}_common")},
-            name="New Brunswick Burn Ban Data",
+            name="New Brunswick",
             manufacturer="Government of New Brunswick",
             model="Burn Ban - Province Data",
             entry_type="service",

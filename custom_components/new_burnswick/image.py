@@ -51,8 +51,8 @@ class NewBurnswickMapImageEntity(
         # Unique ID for the image entity
         self._attr_unique_id = f"{entry.entry_id}_burn_ban_map"
 
-        # Setting name to None ensures it takes the device name as the entity name
-        self._attr_name = None
+        # Explicit name to complement the simplified device name
+        self._attr_name = "Burn Ban Map"
 
         # Associate the image with a provincial service device
         self._attr_device_info = self.coordinator.get_device_info(entry.entry_id)

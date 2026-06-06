@@ -16,8 +16,8 @@ def mock_coordinator():
 
     def mock_get_device_info(entry_id, county=None):
         if county:
-            return {"name": f"{county.title()} County Burn Status"}
-        return {"name": "New Brunswick Burn Ban Data"}
+            return {"name": f"{county.title()} County"}
+        return {"name": "New Brunswick"}
 
     coordinator.get_device_info.side_effect = mock_get_device_info
     return coordinator
@@ -42,7 +42,8 @@ def test_image_entity_init(mock_hass, mock_coordinator, mock_entry):
     entity = NewBurnswickMapImageEntity(mock_hass, mock_coordinator, mock_entry)
 
     assert entity.unique_id == "test_entry_burn_ban_map"
-    assert entity.device_info["name"] == "New Brunswick Burn Ban Data"
+    assert entity.device_info["name"] == "New Brunswick"
+    assert entity.name == "Burn Ban Map"
 
 
 def test_image_url_with_timestamp(mock_hass, mock_coordinator, mock_entry):

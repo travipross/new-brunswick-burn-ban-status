@@ -26,8 +26,8 @@
   },
   "entity": {
     "sensor": {
-      "burn_ban_status": {
-        "name": "Statut de l'interdiction de feux",
+      "burn_ban_category": {
+        "name": "Catégorie d'interdiction de feux",
         "state": {
           "unknown": "Inconnu",
           "none": "Feux interdits",
@@ -35,8 +35,8 @@
           "allowed": "Feux permis"
         }
       },
-      "next_update": {
-        "name": "Prochaine mise à jour"
+      "next_burn_ban_update": {
+        "name": "Prochaine mise à jour des données"
       }
     }
   }

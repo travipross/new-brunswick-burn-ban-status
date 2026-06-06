@@ -58,6 +58,11 @@ class MockEntity(MockBase):
         return self._attr_unique_id
 
     @property
+    def name(self):
+        """Return name."""
+        return self._attr_name
+
+    @property
     def device_info(self):
         """Return device info."""
         return self._attr_device_info

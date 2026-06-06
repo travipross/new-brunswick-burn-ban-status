@@ -51,7 +51,7 @@ class NewBurnswickNextUpdateSensor(
     _attr_has_entity_name = True
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_translation_key = "next_update"
+    _attr_translation_key = "next_burn_ban_update"
 
     def __init__(
         self,
@@ -60,7 +60,7 @@ class NewBurnswickNextUpdateSensor(
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_next_update"
+        self._attr_unique_id = f"{entry.entry_id}_next_burn_ban_data_update"
 
         # Associate the sensor with the provincial service device
         self._attr_device_info = self.coordinator.get_device_info(entry.entry_id)
@@ -77,7 +77,7 @@ class NewBurnswickSensor(
     """Representation of a New Brunswick Burn Ban Status sensor."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "burn_ban_status"
+    _attr_translation_key = "burn_ban_category"
 
     def __init__(
         self,
@@ -91,7 +91,9 @@ class NewBurnswickSensor(
         self.county = county.upper()
 
         # Unique ID for the sensor
-        self._attr_unique_id = f"{entry.entry_id}_{self.county.lower()}_status"
+        self._attr_unique_id = (
+            f"{entry.entry_id}_{self.county.lower()}_burn_ban_category"
+        )
 
         # Setting name to None ensures it takes the device name as the entity name
         self._attr_name = None

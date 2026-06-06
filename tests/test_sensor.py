@@ -25,11 +25,11 @@ def test_next_update_sensor_properties():
         if county:
             return {
                 "identifiers": {("new_burnswick", f"{entry_id}_{county.lower()}")},
-                "name": f"{county.title()} County Burn Status",
+                "name": f"{county.title()} County",
             }
         return {
             "identifiers": {("new_burnswick", f"{entry_id}_common")},
-            "name": "New Brunswick Burn Ban Data",
+            "name": "New Brunswick",
         }
 
     coordinator.get_device_info.side_effect = mock_get_device_info
@@ -38,14 +38,14 @@ def test_next_update_sensor_properties():
 
     sensor = NewBurnswickNextUpdateSensor(coordinator, entry)
 
-    assert sensor.unique_id == "test_entry_next_update"
+    assert sensor.unique_id == "test_entry_next_burn_ban_data_update"
     assert sensor.device_class == SensorDeviceClass.TIMESTAMP
     assert sensor.entity_category == EntityCategory.DIAGNOSTIC
     assert sensor.native_value == next_update
-    assert sensor.translation_key == "next_update"
+    assert sensor.translation_key == "next_burn_ban_update"
     assert sensor.has_entity_name is True
     assert sensor.device_info["identifiers"] == {("new_burnswick", "test_entry_common")}
-    assert sensor.device_info["name"] == "New Brunswick Burn Ban Data"
+    assert sensor.device_info["name"] == "New Brunswick"
 
 
 def test_next_update_sensor_none():
@@ -76,8 +76,9 @@ def test_burn_ban_sensor_properties():
 
     sensor = NewBurnswickSensor(coordinator, entry, county)
 
-    assert sensor.unique_id == "test_entry_york_status"
+    assert sensor.unique_id == "test_entry_york_burn_ban_category"
     assert sensor.state == "allowed"  # Category 3
     assert sensor.extra_state_attributes["county"] == "York"
     assert sensor.extra_state_attributes["api_attributes"] == coordinator.data["YORK"]
     assert sensor.extra_state_attributes["raw_category"] == 3
+    assert sensor.translation_key == "burn_ban_category"

@@ -34,7 +34,7 @@ class NewBurnswickRefreshButton(
     """Representation of a refresh button for the Burn Ban Status."""
 
     _attr_has_entity_name = True
-    _attr_name = "Refresh Data"
+    _attr_name = "Refresh Burn Ban Data"
     _attr_icon = "mdi:refresh"
 
     def __init__(
@@ -47,7 +47,7 @@ class NewBurnswickRefreshButton(
         self.entry = entry
 
         # Unique ID for the button
-        self._attr_unique_id = f"{entry.entry_id}_refresh_button"
+        self._attr_unique_id = f"{entry.entry_id}_refresh_burn_ban_data"
 
         # Associate the button with the provincial service device
         self._attr_device_info = self.coordinator.get_device_info(entry.entry_id)

@@ -23,8 +23,9 @@ def test_fire_allowed_sensor_properties():
 
     sensor = NewBurnswickFireAllowedSensor(coordinator, entry, county)
 
-    assert sensor.unique_id == "test_entry_york_fire_allowed"
+    assert sensor.unique_id == "test_entry_york_burning_currently_allowed"
     assert sensor.is_on is True  # Category 3 is always allowed
     assert sensor.extra_state_attributes["county"] == "York"
     assert sensor.extra_state_attributes["api_attributes"] == coordinator.data["YORK"]
     assert sensor.extra_state_attributes["burn_category"] == 3
+    assert sensor.name == "Burning Currently Allowed"

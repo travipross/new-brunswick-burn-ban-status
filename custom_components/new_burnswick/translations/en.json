@@ -26,17 +26,17 @@
   },
   "entity": {
     "sensor": {
-      "burn_ban_status": {
-        "name": "Burn ban status",
+      "burn_ban_category": {
+        "name": "Burn Ban Category",
         "state": {
           "unknown": "Unknown",
-          "none": "No burning allowed",
-          "limited": "Burning allowed between 8pm and 8am",
-          "allowed": "Burning allowed"
+          "none": "No Burning Allowed",
+          "limited": "Burning Allowed Between 8 PM and 8 AM",
+          "allowed": "Burning Allowed"
         }
       },
-      "next_update": {
-        "name": "Next update"
+      "next_burn_ban_update": {
+        "name": "Next Burn Ban Data Update"
       }
     }
   }
