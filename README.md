@@ -1,4 +1,8 @@
-# New Brunswick Burn Ban Status
+# New BURNswick - NB Fire Watch
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/travipross/new-brunswick-burn-ban-status)
+![GitHub License](https://img.shields.io/github/license/travipross/new-brunswick-burn-ban-status)
 
 A [Home Assistant](https://www.home-assistant.io/) custom integration that tracks the provincial burn ban status for New Brunswick, Canada, sourced directly from the [GNB GIS REST API](https://gis-erd-der.gnb.ca/gisserver/rest/services/FireWeather/BurnCategories/MapServer/0).
 
@@ -59,13 +63,12 @@ While the *status* (Red/Yellow/Green) officially updates at **2:00 PM**, the *pe
 - It does **not** call the API at 8 PM. It simply looks at the last-fetched status and flips its state locally, ensuring your automations trigger precisely on time without network delays.
 
 ## Installation
-...
 
 ### HACS (recommended)
 
 1. Open HACS → **Integrations** → ⋮ → **Custom repositories**.
 2. Add `https://github.com/travipross/new-brunswick-burn-ban-status` as an **Integration**.
-3. Search for **New Brunswick Burn Ban Status** and install.
+3. Search for **New BURNswick - NB Fire Watch** and install.
 4. Restart Home Assistant.
 
 ### Manual
@@ -75,7 +78,7 @@ Copy the `custom_components/new_burnswick/` directory into your Home Assistant `
 ## Configuration
 
 1. Go to **Settings → Devices & Services → Add Integration**.
-2. Search for **New Brunswick Burn Ban Status**.
+2. Search for **New BURNswick - NB Fire Watch**.
 3. Select the counties you want to monitor (or choose **Select All**).
 
 Options (county selection) can be updated at any time without reinstalling by clicking **Configure** on the integration card.
