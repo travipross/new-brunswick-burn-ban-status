@@ -18,10 +18,17 @@ To maintain the technical integrity of this integration, you MUST run the follow
    uv run pytest
    ```
 
+3. **Lockfile Verification:**
+   Ensure the lockfile is synchronized with `pyproject.toml`.
+   ```bash
+   uv lock --check
+   ```
+
 ## Development Workflow
 
 - **Dependency Management:** Use `uv` for all local development tasks.
 - **Environment Setup:** If new dependencies are added, run `uv sync --dev`.
+- **Lockfile Synchronization:** If the package version or dependencies are updated in `pyproject.toml`, run `uv lock` (or `uv sync`) to regenerate `uv.lock` and include the updated `uv.lock` in your commit.
 - **Testing:** All core logic (coordinator, helpers, constants) should have corresponding tests in the `tests/` directory.
 - **Committing:** Follow conventional commit format, with appropriate prefixes for commit short messages. Add extra detail as multi-line content where appropriate
 
