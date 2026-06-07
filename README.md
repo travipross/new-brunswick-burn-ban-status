@@ -77,6 +77,8 @@ Copy the `custom_components/new_burnswick/` directory into your Home Assistant `
 
 ## Configuration
 
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?category=Cloud+Polling&owner=travipross&repository=new-brunswick-burn-ban-status)
+
 1. Go to **Settings → Devices & Services → Add Integration**.
 2. Search for **New BURNswick - NB Fire Watch**.
 3. Select the counties you want to monitor (or choose **Select All**).
