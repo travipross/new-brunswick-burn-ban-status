@@ -1,6 +1,6 @@
 {
   "domain": "new_burnswick",
-  "name": "New Brunswick Burn Ban Status",
+  "name": "New BURNswick - NB Fire Watch",
   "codeowners": ["@travipross"],
   "config_flow": true,
   "documentation": "https://github.com/travipross/new-brunswick-burn-ban-status",
