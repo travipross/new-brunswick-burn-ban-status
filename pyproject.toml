@@ -1,6 +1,6 @@
 [project]
 name = "new_brunswick"
-version = "1.2.4"
+version = "1.6.0"
 description = "New Brunswick Burn Ban Status for Home Assistant"
 authors = [{ name = "travipross" }]
 readme = "README.md"
