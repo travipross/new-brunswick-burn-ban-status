@@ -138,9 +138,9 @@ def test_schedule_next_update_bug_regression(mock_hass, mock_session):
             args, _ = mock_track.call_args
             scheduled_time = args[2]
 
-            # Since valid_dt (11:00) <= now (11:05), it should retry in 15 mins.
-            expected_retry = mock_now + timedelta(minutes=15)
-            assert scheduled_time == expected_retry
+            # Since now (11:05) < today_boundary (14:05), it should wait for 14:05.
+            expected_wait = mock_now.replace(hour=14, minute=5, second=0, microsecond=0)
+            assert scheduled_time == expected_wait
 
 
 def test_schedule_next_update_future_validdate(mock_hass, mock_session):
@@ -170,13 +170,14 @@ def test_schedule_next_update_future_validdate(mock_hass, mock_session):
             args, _ = mock_track.call_args
             scheduled_time = args[2]
 
-            # Since valid_dt (11:00) > now (10:00), it should schedule for 11:05 AM
-            expected_next = valid_date + timedelta(minutes=5)
+            # Since valid_dt (11:00) > now (10:00), but floor is 14:05,
+            # it should schedule for 14:05 PM
+            expected_next = mock_now.replace(hour=14, minute=5, second=0, microsecond=0)
             assert scheduled_time == expected_next
 
 
 def test_schedule_next_update_retry_param(mock_hass, mock_session):
-    """Test that setting retry=True schedules a 15-min poll."""
+    """Test that setting retry=True schedules for the 2:05 PM boundary if before it."""
     coordinator = NewBurnswickCoordinator(mock_hass, mock_session)
     mock_now = datetime(2026, 6, 2, 10, 0, 0, tzinfo=NB_TZ)
 
@@ -187,12 +188,14 @@ def test_schedule_next_update_retry_param(mock_hass, mock_session):
         ) as mock_track:
             coordinator._schedule_next_update(None, retry=True)
             args, _ = mock_track.call_args
-            assert args[2] == mock_now + timedelta(minutes=15)
+            # Since 10:00 < 14:05, it should wait for 14:05.
+            expected_wait = mock_now.replace(hour=14, minute=5, second=0, microsecond=0)
+            assert args[2] == expected_wait
             assert coordinator.next_update_at == args[2]
 
 
 def test_schedule_next_update_missing_data(mock_hass, mock_session):
-    """Test that missing data schedules a 15-min retry."""
+    """Test that missing data schedules for the 2:05 PM boundary if before it."""
     coordinator = NewBurnswickCoordinator(mock_hass, mock_session)
     mock_now = datetime(2026, 6, 2, 10, 0, 0, tzinfo=NB_TZ)
 
@@ -203,11 +206,13 @@ def test_schedule_next_update_missing_data(mock_hass, mock_session):
         ) as mock_track:
             coordinator._schedule_next_update(None)
             args, _ = mock_track.call_args
-            assert args[2] == mock_now + timedelta(minutes=15)
+            # Since 10:00 < 14:05, it should wait for 14:05.
+            expected_wait = mock_now.replace(hour=14, minute=5, second=0, microsecond=0)
+            assert args[2] == expected_wait
 
 
 def test_schedule_next_update_missing_validdate(mock_hass, mock_session):
-    """Test that missing VALIDDATE schedules a 15-min retry."""
+    """Test that missing VALIDDATE schedules for the 2:05 PM boundary if before it."""
     coordinator = NewBurnswickCoordinator(mock_hass, mock_session)
     mock_now = datetime(2026, 6, 2, 10, 0, 0, tzinfo=NB_TZ)
     data = {"YORK": {"PUBLICCATEGORY": 3}}  # Missing VALIDDATE
@@ -219,4 +224,6 @@ def test_schedule_next_update_missing_validdate(mock_hass, mock_session):
         ) as mock_track:
             coordinator._schedule_next_update(data)
             args, _ = mock_track.call_args
-            assert args[2] == mock_now + timedelta(minutes=15)
+            # Since 10:00 < 14:05, it should wait for 14:05.
+            expected_wait = mock_now.replace(hour=14, minute=5, second=0, microsecond=0)
+            assert args[2] == expected_wait

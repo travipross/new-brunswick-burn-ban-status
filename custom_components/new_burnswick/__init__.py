@@ -20,6 +20,8 @@ from .const import (
     CONF_COUNTY,
     DID_SUFFIX_COMMON,
     DOMAIN,
+    UPDATE_HOUR_DATA,
+    UPDATE_MINUTE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -133,6 +135,8 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
 
         Strategy:
         - If we have a VALIDDATE in the future, sleep until 5 minutes after it expires.
+        - Ensure we never target a time earlier than 2:05 PM Atlantic (the official
+          refresh boundary), even if the API claims an earlier 11 AM expiration.
         - If VALIDDATE is in the past (expired) or missing, poll every 15 minutes.
         """
         if self._next_update_callback:
@@ -140,6 +144,11 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             self._next_update_callback = None
 
         now_nb = datetime.now(tz=NB_TZ)
+        # Official update boundary is 2:05 PM Atlantic
+        today_boundary = now_nb.replace(
+            hour=UPDATE_HOUR_DATA, minute=UPDATE_MINUTE, second=0, microsecond=0
+        )
+
         next_update: datetime | None = None
 
         if not retry and data:
@@ -147,13 +156,13 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             first_county = next(iter(data.values()))
             valid_date_ms = first_county.get("VALIDDATE")
             if valid_date_ms:
-                # VALIDDATE is the expiration timestamp (usually 11:00 AM Atlantic)
+                # VALIDDATE is the expiration timestamp (often 11:00 AM or 2:00 PM)
                 valid_dt = datetime.fromtimestamp(valid_date_ms / 1000.0, tz=NB_TZ)
 
                 if valid_dt > now_nb:
-                    # Data is valid for some time in the future.
-                    # Schedule next check for 5 minutes after it expires.
-                    next_update = valid_dt + timedelta(minutes=5)
+                    # Data is valid in the future. Target 5m after expiration,
+                    # but floor it to today's 2:05 PM to avoid stale loops.
+                    next_update = max(valid_dt + timedelta(minutes=5), today_boundary)
                     _LOGGER.debug(
                         "Data is valid until %s. Scheduling next poll for %s.",
                         valid_dt.isoformat(),
@@ -162,11 +171,20 @@ class NewBurnswickCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
 
         if not next_update:
             # Data is expired, missing, or we're in a retry state.
-            next_update = now_nb + timedelta(minutes=15)
-            _LOGGER.debug(
-                "Data is stale or missing. Retrying in 15 minutes: %s",
-                next_update.isoformat(),
-            )
+            # If it's before 2:05 PM today, target 2:05 PM.
+            # If it's after 2:05 PM, retry in 15 minutes.
+            if now_nb < today_boundary:
+                next_update = today_boundary
+                _LOGGER.debug(
+                    "Waiting for today's 2 PM update. Scheduling for %s.",
+                    next_update.isoformat(),
+                )
+            else:
+                next_update = now_nb + timedelta(minutes=15)
+                _LOGGER.debug(
+                    "Data is stale or missing. Retrying in 15 minutes: %s",
+                    next_update.isoformat(),
+                )
 
         self.next_update_at = next_update
         _LOGGER.debug(
